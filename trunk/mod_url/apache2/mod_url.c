@@ -118,6 +118,8 @@ static void *merge_mconfig_for_directory(apr_pool_t *p, void *basev, void *overr
         over->server_encoding ? over->server_encoding : base->server_encoding;
     a->client_encoding =
         over->client_encoding ? over->client_encoding : base->client_encoding;
+    a->enabled = over->enabled;
+    a->cd = 0;
     return a;
 }
 
@@ -134,7 +136,7 @@ static const char *set_redurl(cmd_parms *cmd, void *mconfig, int arg)
 
 /* ServerEncoding charset
  */
-static const char *add_server_encoding(cmd_parms *cmd, void *mconfig,
+static const char *set_server_encoding(cmd_parms *cmd, void *mconfig,
                                        const char *name)
 {
     urlconfig *cfg = (urlconfig *) mconfig;
@@ -145,7 +147,7 @@ static const char *add_server_encoding(cmd_parms *cmd, void *mconfig,
 
 /* ClientEncoding charset
  */
-static const char *add_client_encoding(cmd_parms *cmd, void *mconfig,
+static const char *set_client_encoding(cmd_parms *cmd, void *mconfig,
                                        const char *name)
 {
     urlconfig *cfg = (urlconfig *) mconfig;
@@ -162,9 +164,9 @@ static const command_rec redurl_cmds[] =
 {
     AP_INIT_FLAG("CheckURL", set_redurl, NULL, OR_OPTIONS,
                  "whether or not to fix mis-encoded URL requests"),
-    AP_INIT_TAKE1("ServerEncoding", add_server_encoding, NULL, OR_FILEINFO,
+    AP_INIT_TAKE1("ServerEncoding", set_server_encoding, NULL, OR_FILEINFO,
                   "name of server encoding"),
-    AP_INIT_TAKE1("ClientEncoding", add_client_encoding, NULL, OR_FILEINFO,
+    AP_INIT_TAKE1("ClientEncoding", set_client_encoding, NULL, OR_FILEINFO,
                   "name of client url encoding"),
     { NULL }
 };
@@ -239,8 +241,10 @@ static int check_redurl(request_rec *r)
 		 r->uri, good, url);
     {
 	char *src = r->uri;
-	char buf[2048]="\0", *to; /* XXX */
-	size_t len,flen, tlen, ret;
+	char *buf, *to;
+	apr_pool_t *p = r->pool;
+	size_t len, flen, tlen, ret;
+
 	if (cfg->cd == 0) {
 	    cfg->cd = iconv_open(cfg->server_encoding, cfg->client_encoding);
 	    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
@@ -248,22 +252,25 @@ static int check_redurl(request_rec *r)
 		cfg->server_encoding ? cfg->server_encoding : "unspecified",
 		cfg->client_encoding ? cfg->client_encoding : "unspecified");
 	    if (cfg->cd == (iconv_t)(-1)) {
-		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
+		ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
 		    "incomplete configuration: ServerEncoding %s, ClientEndoding %s",
 		    cfg->server_encoding ? cfg->server_encoding : "unspecified",
 		    cfg->client_encoding ? cfg->client_encoding : "unspecified");
 		return DECLINED;
 	   }
 	}
+	
 	flen = len = strlen(src);
-	tlen = 2*flen;
+	tlen = flen * 4 + 1; /* MB_CUR_MAX ~ 4 */
+	buf = (char*)apr_pcalloc(p, tlen);
 	to= buf;
+
 	ret=iconv(cfg->cd, &src, &flen, &to, &tlen);
 
 	tlen=strlen(buf);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 		 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
-		 r->uri,buf,len,tlen,ret);
+		 r->uri, buf, len, tlen, ret);
 	if (ret >= 0
 #if __GLIBC_MINOR__ == 2
 	&& ret == 0
@@ -283,7 +290,7 @@ static int check_redurl(request_rec *r)
             apr_table_setn(r->headers_out, "Location",
 			  ap_construct_url(r->pool, nuri, r));
 
-            ap_log_rerror(APLOG_MARK, APLOG_INFO, APR_SUCCESS, r,
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			 "Fixed URL: %s to %s",
 			 r->uri, nuri);
 
@@ -305,7 +312,7 @@ module AP_MODULE_DECLARE_DATA redurl_module =
 {
     STANDARD20_MODULE_STUFF,
     create_mconfig_for_directory,	/* create per-dir config */
-    NULL,				/* merge per-dir config */
+    merge_mconfig_for_directory,	/* merge per-dir config */
     create_mconfig_for_server,		/* server config */
     NULL,				/* merge server config */
     redurl_cmds,			/* command apr_table_t */
