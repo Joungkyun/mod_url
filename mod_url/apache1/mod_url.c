@@ -63,7 +63,7 @@
 #include <iconv.h>
 
 /* mod_url.c:: fix mismatched URL encoding between server and clients
- *   by Won-kyu Park <wkpark@kldp.org>
+ *   by Won-Kyu Park <wkpark@kldp.org>
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
  */
@@ -75,6 +75,9 @@
  * 2002: fix for glibc-2.2 iconv: by JoungKyun Kim <http://www.oops.org>
  * 2004/08/03: add 'ServerEncoding' 'ClientEncoding' options
  *  - add per-dir support
+ * 2004/11/25: fix #300597: set default values for ServerEncoding and ClientEncoding
+ * 2004/11/25: fix #300597:
+ *  - check 'ServerEncoding' and 'ClientEncoding' before iconv_open()
  *
  * Usage:
  *
@@ -141,12 +144,12 @@ static void *merge_mconfig_for_directory(pool *p, void *basev, void *overridesv)
 {
     urlconfig *a = (urlconfig *)ap_pcalloc (p, sizeof(urlconfig));
     urlconfig *base = (urlconfig *)basev,
-        *over = (urlconfig *)overridesv;
+	*over = (urlconfig *)overridesv;
 
     a->server_encoding =
-        over->server_encoding ? over->server_encoding : base->server_encoding;
+	over->server_encoding ? over->server_encoding : base->server_encoding;
     a->client_encoding =
-        over->client_encoding ? over->client_encoding : base->client_encoding;
+	over->client_encoding ? over->client_encoding : base->client_encoding;
     a->enabled = over->enabled;
     a->cd = 0;
     return a;
@@ -166,7 +169,7 @@ static const char *set_redurl(cmd_parms *cmd, void *mconfig, int arg)
 /* ServerEncoding charset
  */
 static const char *set_server_encoding(cmd_parms *cmd, void *mconfig,
-                                       const char *name)
+				       const char *name)
 {
     urlconfig *cfg = (urlconfig *) mconfig;
 
@@ -177,7 +180,7 @@ static const char *set_server_encoding(cmd_parms *cmd, void *mconfig,
 /* ClientEncoding charset
  */
 static const char *set_client_encoding(cmd_parms *cmd, void *mconfig,
-                                       const char *name)
+				       const char *name)
 {
     urlconfig *cfg = (urlconfig *) mconfig;
 
@@ -194,9 +197,9 @@ static const command_rec redurl_cmds[] =
     { "CheckURL", set_redurl, NULL, OR_OPTIONS, FLAG,
       "whether or not to fix mis-encoded URL requests" },
     { "ServerEncoding", set_server_encoding, NULL, OR_FILEINFO, TAKE1,
-                  "name of server encoding"},
+		  "name of server encoding"},
     { "ClientEncoding", set_client_encoding, NULL, OR_FILEINFO, TAKE1,
-                  "name of client url encoding"},
+		  "name of client url encoding"},
     { NULL }
 };
 
@@ -211,22 +214,22 @@ static int check_redurl(request_rec *r)
 
     cfg = ap_get_module_config(r->per_dir_config, &redurl_module);
     if (!cfg->enabled) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* We only want to worry about GETs */
     if (r->method_number != M_GET) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* We've already got a file of some kind or another */
     if (r->proxyreq || (r->finfo.st_mode != 0)) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* This is a sub request - don't mess with it */
     if (r->main) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /*
@@ -243,7 +246,7 @@ static int check_redurl(request_rec *r)
      * requests "/" 
      */
     if (filoc == -1 || strcmp(r->uri, "/") == 0) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* good = /correct-file */
@@ -258,39 +261,41 @@ static int check_redurl(request_rec *r)
 
     /* Check to see if the URL pieces add up */
     if (strcmp(postgood, r->uri + (urlen - pglen))) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* url = /correct-url */
     url = ap_pstrndup(r->pool, r->uri, (urlen - pglen));
 
-    /* ½ÃÀÛ */
+    /* start of main routine */
     ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
 		 "Orig URL: %s %s url:%s",
 		 r->uri, good, url);
 
     {
 	char *src = r->uri;
-        char *buf, *to;
-        pool *p = r->pool;
+	char *buf, *to;
+	pool *p = r->pool;
 	size_t len, flen, tlen, ret;
 	if (cfg->cd == 0) {
+	    if (!cfg->server_encoding && !cfg->client_encoding) {
+		ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
+		    "mod_url configuration: ServerEncoding %s, ClientEndoding %s",
+		    cfg->server_encoding ? cfg->server_encoding : "unspecified",
+		    cfg->client_encoding ? cfg->client_encoding : "unspecified");
+	    }
 	    cfg->cd = iconv_open(cfg->server_encoding, cfg->client_encoding);
-            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
-                "mod_url configuration: ServerEncoding %s, ClientEndoding %s",
-                cfg->server_encoding ? cfg->server_encoding : "unspecified",
-                cfg->client_encoding ? cfg->client_encoding : "unspecified");
-            if (cfg->cd == (iconv_t)(-1)) {
-                ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
-                    "incomplete configuration: ServerEncoding %s, ClientEndoding %s",
-                    cfg->server_encoding ? cfg->server_encoding : "unspecified",
-                    cfg->client_encoding ? cfg->client_encoding : "unspecified");
-                return DECLINED;
+	    if (cfg->cd == (iconv_t)(-1)) {
+		ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
+		    "incomplete configuration: ServerEncoding %s, ClientEndoding %s",
+		    cfg->server_encoding ? cfg->server_encoding : "unspecified",
+		    cfg->client_encoding ? cfg->client_encoding : "unspecified");
+		return DECLINED;
 	    }
 	}
 	flen = len = strlen(src);
-        tlen = flen * 4 + 1; /* MB_CUR_MAX ~ 4 */
-        buf = (char*)ap_pcalloc(p, tlen);
+	tlen = flen * 4 + 1; /* MB_CUR_MAX ~ 4 */
+	buf = (char*)ap_pcalloc(p, tlen);
 	to= buf;
 
 	ret=iconv(cfg->cd, &src, &flen, &to, &tlen);
@@ -299,7 +304,7 @@ static int check_redurl(request_rec *r)
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
 		 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
 		 r->uri, buf, len, tlen, ret);
-       if (ret >= 0
+	if (ret >= 0
 #if __GLIBC_MINOR__ == 2
 	&& ret == 0
 #endif
@@ -310,21 +315,21 @@ static int check_redurl(request_rec *r)
 	 * flen == tlen then URL is ascii */
 	    char *nuri;
 
-            nuri = ap_pstrcat(r->pool, buf,
+	    nuri = ap_pstrcat(r->pool, buf,
 			      r->parsed_uri.query ? "?" : "",
 			      r->parsed_uri.query ? r->parsed_uri.query : "",
 			      NULL);
 
-            ap_table_setn(r->headers_out, "Location",
+	    ap_table_setn(r->headers_out, "Location",
 			  ap_construct_url(r->pool, nuri, r));
 
-            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
+	    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
 			 "Fixed URL: %s to %s",
 			 r->uri, nuri);
 
-            return HTTP_MOVED_PERMANENTLY;
-       } else
-            return DECLINED;
+	    return HTTP_MOVED_PERMANENTLY;
+	} else
+	    return DECLINED;
     } 
     /* end of main routine */
 
@@ -334,22 +339,22 @@ static int check_redurl(request_rec *r)
 module MODULE_VAR_EXPORT redurl_module =
 {
     STANDARD_MODULE_STUFF,
-    NULL,                       /* initializer */
+    NULL,			/* initializer */
     create_mconfig_for_directory,  /* create per-dir config */
     merge_mconfig_for_directory,   /* merge per-dir config */
-    create_mconfig_for_server,  /* server config */
-    NULL,                       /* merge server config */
-    redurl_cmds,                /* command table */
-    NULL,                       /* handlers */
-    NULL,                       /* filename translation */
-    NULL,                       /* check_user_id */
-    NULL,                       /* check auth */
-    NULL,                       /* check access */
-    NULL,                       /* type_checker */
-    check_redurl,               /* fixups */
-    NULL,                       /* logger */
-    NULL,                       /* header parser */
-    NULL,                       /* child_init */
-    NULL,                       /* child_exit */
-    NULL                        /* post read-request */
+    create_mconfig_for_server,	/* server config */
+    NULL,			/* merge server config */
+    redurl_cmds,		/* command table */
+    NULL,			/* handlers */
+    NULL,			/* filename translation */
+    NULL,			/* check_user_id */
+    NULL,			/* check auth */
+    NULL,			/* check access */
+    NULL,			/* type_checker */
+    check_redurl,		/* fixups */
+    NULL,			/* logger */
+    NULL,			/* header parser */
+    NULL,			/* child_init */
+    NULL,			/* child_exit */
+    NULL			/* post read-request */
 };

@@ -30,7 +30,7 @@
 #include <iconv.h>
 
 /* mod_url.c: fix mismatched URL encoding between server and clients
- *   by Won-kyu Park <wkpark@chem.skku.ac.kr>
+ *   by Won-Kyu Park <wkpark@kldp.org>
  * ported to apache 2.0 API by JoungKyun Kim <http://www.oops.org>
  *
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
@@ -44,6 +44,8 @@
  * 2002/08: ported to apache 2.0 by JoungKyun Kim
  * 2004/08/03: add 'ServerEncoding' 'ClientEncoding' options
  *  - add per-dir support
+ * 2004/11/25:
+ *  - fix #300597: check 'ServerEncoding' and 'ClientEncoding' before iconv_open()
  *
  * Usage:
  *
@@ -110,12 +112,12 @@ static void *merge_mconfig_for_directory(apr_pool_t *p, void *basev, void *overr
 {
     urlconfig *a = (urlconfig *)apr_pcalloc (p, sizeof(urlconfig));
     urlconfig *base = (urlconfig *)basev,
-        *over = (urlconfig *)overridesv;
+	*over = (urlconfig *)overridesv;
 
     a->server_encoding =
-        over->server_encoding ? over->server_encoding : base->server_encoding;
+	over->server_encoding ? over->server_encoding : base->server_encoding;
     a->client_encoding =
-        over->client_encoding ? over->client_encoding : base->client_encoding;
+	over->client_encoding ? over->client_encoding : base->client_encoding;
     a->enabled = over->enabled;
     a->cd = 0;
     return a;
@@ -135,7 +137,7 @@ static const char *set_redurl(cmd_parms *cmd, void *mconfig, int arg)
 /* ServerEncoding charset
  */
 static const char *set_server_encoding(cmd_parms *cmd, void *mconfig,
-                                       const char *name)
+				       const char *name)
 {
     urlconfig *cfg = (urlconfig *) mconfig;
 
@@ -146,7 +148,7 @@ static const char *set_server_encoding(cmd_parms *cmd, void *mconfig,
 /* ClientEncoding charset
  */
 static const char *set_client_encoding(cmd_parms *cmd, void *mconfig,
-                                       const char *name)
+				       const char *name)
 {
     urlconfig *cfg = (urlconfig *) mconfig;
 
@@ -161,11 +163,11 @@ static const char *set_client_encoding(cmd_parms *cmd, void *mconfig,
 static const command_rec redurl_cmds[] =
 {
     AP_INIT_FLAG("CheckURL", set_redurl, NULL, OR_OPTIONS,
-                 "whether or not to fix mis-encoded URL requests"),
+		 "whether or not to fix mis-encoded URL requests"),
     AP_INIT_TAKE1("ServerEncoding", set_server_encoding, NULL, OR_FILEINFO,
-                  "name of server encoding"),
+		  "name of server encoding"),
     AP_INIT_TAKE1("ClientEncoding", set_client_encoding, NULL, OR_FILEINFO,
-                  "name of client url encoding"),
+		  "name of client url encoding"),
     { NULL }
 };
 
@@ -176,26 +178,26 @@ static int check_redurl(request_rec *r)
     apr_finfo_t dirent;
     int filoc, dotloc, urlen, pglen;
     apr_array_header_t *candidates = NULL;
-    apr_dir_t          *dir;
+    apr_dir_t	       *dir;
 
     cfg = ap_get_module_config(r->per_dir_config, &redurl_module);
     if (!cfg->enabled) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* We only want to worry about GETs */
     if (r->method_number != M_GET) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* We've already got a file of some kind or another */
     if (r->proxyreq || (r->finfo.filetype != 0)) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* This is a sub request - don't mess with it */
     if (r->main) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /*
@@ -212,7 +214,7 @@ static int check_redurl(request_rec *r)
      * requests "/" 
      */
     if (filoc == -1 || strcmp(r->uri, "/") == 0) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* good = /correct-file */
@@ -227,7 +229,7 @@ static int check_redurl(request_rec *r)
 
     /* Check to see if the URL pieces add up */
     if (strcmp(postgood, r->uri + (urlen - pglen))) {
-        return DECLINED;
+	return DECLINED;
     }
 
     /* url = /correct-url */
@@ -244,11 +246,14 @@ static int check_redurl(request_rec *r)
 	size_t len, flen, tlen, ret;
 
 	if (cfg->cd == 0) {
+	    if (!cfg->server_encoding && !cfg->client_encoding) {
+		ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
+		    "mod_url configuration: ServerEncoding %s, ClientEndoding %s",
+		    cfg->server_encoding ? cfg->server_encoding : "unspecified",
+		    cfg->client_encoding ? cfg->client_encoding : "unspecified");
+		return DECLINED;
+	    }
 	    cfg->cd = iconv_open(cfg->server_encoding, cfg->client_encoding);
-	    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
-		"mod_url configuration: ServerEncoding %s, ClientEndoding %s",
-		cfg->server_encoding ? cfg->server_encoding : "unspecified",
-		cfg->client_encoding ? cfg->client_encoding : "unspecified");
 	    if (cfg->cd == (iconv_t)(-1)) {
 		ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
 		    "incomplete configuration: ServerEncoding %s, ClientEndoding %s",
@@ -280,21 +285,21 @@ static int check_redurl(request_rec *r)
 	 * flen == tlen then URL is ascii */
 	    char *nuri;
 
-            nuri = apr_pstrcat(r->pool, buf,
+	    nuri = apr_pstrcat(r->pool, buf,
 			       r->parsed_uri.query ? "?" : "",
 			       r->parsed_uri.query ? r->parsed_uri.query : "",
 			       NULL);
 
-            apr_table_setn(r->headers_out, "Location",
+	    apr_table_setn(r->headers_out, "Location",
 			  ap_construct_url(r->pool, nuri, r));
 
-            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
+	    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			 "Fixed URL: %s to %s",
 			 r->uri, nuri);
 
-            return HTTP_MOVED_PERMANENTLY;
+	    return HTTP_MOVED_PERMANENTLY;
        } else
-            return DECLINED;
+	    return DECLINED;
     } 
     /* end of main routine */
 
