@@ -1,0 +1,292 @@
+/* ====================================================================
+ * Copyright (c) 1996-1999 The Apache Group.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * 3. All advertising materials mentioning features or use of this
+ *    software must display the following acknowledgment:
+ *    "This product includes software developed by the Apache Group
+ *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ *
+ * 4. The names "Apache Server" and "Apache Group" must not be used to
+ *    endorse or promote products derived from this software without
+ *    prior written permission. For written permission, please contact
+ *    apache@apache.org.
+ *
+ * 5. Products derived from this software may not be called "Apache"
+ *    nor may "Apache" appear in their names without prior written
+ *    permission of the Apache Group.
+ *
+ * 6. Redistributions of any form whatsoever must retain the following
+ *    acknowledgment:
+ *    "This product includes software developed by the Apache Group
+ *    for use in the Apache HTTP server project (http://www.apache.org/)."
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
+ * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
+ * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ====================================================================
+ *
+ * This software consists of voluntary contributions made by many
+ * individuals on behalf of the Apache Group and was originally based
+ * on public domain software written at the National Center for
+ * Supercomputing Applications, University of Illinois, Urbana-Champaign.
+ * For more information on the Apache Group and the Apache HTTP server
+ * project, please see <http://www.apache.org/>.
+ *
+ */
+
+#include "apr.h"
+#include "apr_file_io.h"
+#include "apr_strings.h"
+#include "apr_lib.h"
+
+#define APR_WANT_STRFUNC
+#include "apr_want.h"
+
+#define WANT_BASENAME_MATCH
+
+#include "httpd.h"
+#include "http_core.h"
+#include "http_config.h"
+#include "http_request.h"
+#include "http_log.h"
+
+
+#include <iconv.h>
+
+/* mod_url.c - by Won-kyu Park <wkpark@chem.skku.ac.kr>
+ * migrated for apache 2.0 by JoungKyun Kim <http://www.oops.org>
+ * 
+ * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
+ *
+ * Activate it with "CheckURL encoding On"
+ */
+
+module AP_MODULE_DECLARE_DATA redurl_module;
+
+typedef struct {
+    int enabled;
+} urlconfig;
+
+/*
+ * Create a configuration specific to this module for a server or directory
+ * location, and fill it with the default settings.
+ *
+ * The API says that in the absence of a merge function, the record for the
+ * closest ancestor is used exclusively.  That's what we want, so we don't
+ * bother to have such a function.
+ */
+
+static void *mkconfig(apr_pool_t *p)
+{
+    urlconfig *cfg = apr_pcalloc(p, sizeof(urlconfig));
+
+    cfg->enabled = 0;
+    return cfg;
+}
+
+/*
+ * Respond to a callback to create configuration record for a server or
+ * vhost environment.
+ */
+static void *create_mconfig_for_server(apr_pool_t *p, server_rec *s)
+{
+    return mkconfig(p);
+}
+
+/*
+ * Respond to a callback to create a config record for a specific directory.
+ */
+static void *create_mconfig_for_directory(apr_pool_t *p, char *dir)
+{
+    return mkconfig(p);
+}
+
+/*
+ * Handler for the CheckURL encoding directive, which is FLAG.
+ */
+static const char *set_redurl(cmd_parms *cmd, void *mconfig, int arg)
+{
+    urlconfig *cfg = (urlconfig *) mconfig;
+
+    cfg->enabled = arg;
+    return NULL;
+}
+
+/*
+ * Define the directives specific to this module.  This structure is referenced
+ * later by the 'module' structure.
+ */
+static const command_rec redurl_cmds[] =
+{
+    AP_INIT_FLAG("CheckURL", set_redurl, NULL, OR_OPTIONS,
+                 "whether or not to fix mis-encoded URL requests"),
+    { NULL }
+};
+
+static int check_redurl(request_rec *r)
+{
+    urlconfig *cfg;
+    char *good, *bad, *postgood, *url;
+    apr_finfo_t dirent;
+    int filoc, dotloc, urlen, pglen;
+    apr_array_header_t *candidates = NULL;
+    apr_dir_t          *dir;
+
+    cfg = ap_get_module_config(r->per_dir_config, &redurl_module);
+    if (!cfg->enabled) {
+        return DECLINED;
+    }
+
+    /* We only want to worry about GETs */
+    if (r->method_number != M_GET) {
+        return DECLINED;
+    }
+
+    /* We've already got a file of some kind or another */
+    if (r->proxyreq || (r->finfo.filetype != 0)) {
+        return DECLINED;
+    }
+
+    /* This is a sub request - don't mess with it */
+    if (r->main) {
+        return DECLINED;
+    }
+
+    /*
+     * The request should end up looking like this:
+     * r->uri: /correct-url/mispelling/more
+     * r->filename: /correct-file/mispelling r->path_info: /more
+     *
+     * So we do this in steps. First break r->filename into two pieces
+     */
+
+    filoc = ap_rind(r->filename, '/');
+    /*
+     * Don't do anything if the request doesn't contain a slash, or
+     * requests "/" 
+     */
+    if (filoc == -1 || strcmp(r->uri, "/") == 0) {
+        return DECLINED;
+    }
+
+    /* good = /correct-file */
+    good = apr_pstrndup(r->pool, r->filename, filoc);
+    /* bad = mispelling */
+    bad = apr_pstrdup(r->pool, r->filename + filoc + 1);
+    /* postgood = mispelling/more */
+    postgood = apr_pstrcat(r->pool, bad, r->path_info, NULL);
+
+    urlen = strlen(r->uri);
+    pglen = strlen(postgood);
+
+    /* Check to see if the URL pieces add up */
+    if (strcmp(postgood, r->uri + (urlen - pglen))) {
+        return DECLINED;
+    }
+
+    /* url = /correct-url */
+    url = apr_pstrndup(r->pool, r->uri, (urlen - pglen));
+
+    /* 시작 */
+    ap_log_rerror(APLOG_MARK, APLOG_INFO, APR_SUCCESS, r,
+		 "Orig URL: %s %s url:%s",
+		 r->uri, good, url);
+
+    {
+        static iconv_t cd = 0;
+//        const char *src = "안녕하세요";
+//        const char *src = "휟켝襤8�~T";
+
+	/*
+	 * glibc 2.2 patch by JoungKyun Kim
+	 *     -> 2th argument of iconv() is removed const
+	 */
+//        const char *src = r->uri;
+        char *src = r->uri;
+        char buf[2048]="\0", *to; /* XXX */
+        size_t len,flen, tlen,t;
+        if (cd == 0) {
+           cd = iconv_open("EUCKR", "UTF-8");
+        }
+        flen = len = strlen(src);
+        tlen = 2*flen;
+        to= buf;
+        // to = malloc(tlen);
+        t=iconv(cd, &src, &flen, &to, &tlen);
+
+        tlen=strlen(buf);
+	ap_log_rerror(APLOG_MARK, APLOG_INFO, APR_SUCCESS, r,
+		 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
+		 r->uri,buf,len,tlen,t);
+       if (t >= 0
+#if __GLIBC_MINOR__ == 2
+	&& t == 0
+#endif
+	&& len != 0 && tlen != len) {
+	/* CHECK CODE 't' 에 대한 설명 */
+	/* t ==-1
+		URL이 이미 정상적인 EUCKR 인 경우:변환 필요 없는 경우 */
+	/* t == 0
+		정상적으로 UTF8 이 EUCKR 로 변환된 경우 */
+	/* t > 0
+		glibc 2.1.[2,3] 의 경우 변환된 문자열의 갯수를 돌려줌 */
+	/* flen == tlen 인 경우는 URL이 ascii일 경우 */
+	char *nuri;
+
+            nuri = apr_pstrcat(r->pool, buf,
+			       r->parsed_uri.query ? "?" : "",
+			       r->parsed_uri.query ? r->parsed_uri.query : "",
+			       NULL);
+
+            apr_table_setn(r->headers_out, "Location",
+			  ap_construct_url(r->pool, nuri, r));
+
+            ap_log_rerror(APLOG_MARK, APLOG_INFO, APR_SUCCESS, r,
+			 "Fixed URL: %s to %s",
+			 r->uri, nuri);
+
+            return HTTP_MOVED_PERMANENTLY;
+       } else
+            return DECLINED;
+    } 
+    /* 끝 */
+
+    return OK;
+}
+
+static void register_hooks(apr_pool_t *p)
+{
+    ap_hook_fixups(check_redurl,NULL,NULL,APR_HOOK_LAST);
+}
+
+module AP_MODULE_DECLARE_DATA redurl_module =
+{
+    STANDARD20_MODULE_STUFF,
+    create_mconfig_for_directory,	/* create per-dir config */
+    NULL,				/* merge per-dir config */
+    create_mconfig_for_server,		/* server config */
+    NULL,				/* merge server config */
+    redurl_cmds,			/* command apr_table_t */
+    register_hooks			/* register hooks */
+};
