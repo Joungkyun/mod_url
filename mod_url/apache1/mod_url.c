@@ -283,6 +283,7 @@ static int check_redurl(request_rec *r)
 		    "mod_url configuration: ServerEncoding %s, ClientEndoding %s",
 		    cfg->server_encoding ? cfg->server_encoding : "unspecified",
 		    cfg->client_encoding ? cfg->client_encoding : "unspecified");
+		return DECLINED;
 	    }
 	    cfg->cd = iconv_open(cfg->server_encoding, cfg->client_encoding);
 	    if (cfg->cd == (iconv_t)(-1)) {
