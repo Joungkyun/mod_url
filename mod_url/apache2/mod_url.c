@@ -21,8 +21,6 @@
 #define APR_WANT_STRFUNC
 #include "apr_want.h"
 
-#define WANT_BASENAME_MATCH
-
 #include "httpd.h"
 #include "http_core.h"
 #include "http_config.h"
