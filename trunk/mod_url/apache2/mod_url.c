@@ -1,58 +1,16 @@
-/* ====================================================================
- * Copyright (c) 1996-1999 The Apache Group.  All rights reserved.
+/* Copyright 1999-2004 The Apache Software Foundation
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * 4. The names "Apache Server" and "Apache Group" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    apache@apache.org.
- *
- * 5. Products derived from this software may not be called "Apache"
- *    nor may "Apache" appear in their names without prior written
- *    permission of the Apache Group.
- *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the Apache Group
- *    for use in the Apache HTTP server project (http://www.apache.org/)."
- *
- * THIS SOFTWARE IS PROVIDED BY THE APACHE GROUP ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE APACHE GROUP OR
- * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- * ====================================================================
- *
- * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Group and was originally based
- * on public domain software written at the National Center for
- * Supercomputing Applications, University of Illinois, Urbana-Champaign.
- * For more information on the Apache Group and the Apache HTTP server
- * project, please see <http://www.apache.org/>.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "apr.h"
@@ -71,21 +29,48 @@
 #include "http_request.h"
 #include "http_log.h"
 
-
 #include <iconv.h>
 
-/* mod_url.c - by Won-kyu Park <wkpark@chem.skku.ac.kr>
- * migrated for apache 2.0 by JoungKyun Kim <http://www.oops.org>
- * 
- * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
+/* mod_url.c: fix mismatched URL encoding between server and clients
+ *   by Won-kyu Park <wkpark@chem.skku.ac.kr>
+ * ported to apache 2.0 API by JoungKyun Kim <http://www.oops.org>
  *
- * Activate it with "CheckURL encoding On"
+ * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
+ */
+
+/* ChangLog:
+ *
+ * 2000: initial release
+ * 2000/10/11: fix for glibc-2.1.x glibc-2.2
+ * 2002: glibc-2.2 iconv patch: by JoungKyun Kim
+ * 2002/08: ported to apache 2.0 by JoungKyun Kim
+ * 2004/08/03: add 'ServerEncoding' 'ClientEncoding' options
+ *  - add per-dir support
+ *
+ * Usage:
+ *
+ * 1. Compile it:
+ * /usr/sbin/apxs -i -a -c mod_url.c
+ *
+ * 2. Edit your conf/httpd.conf file, and add a LoadModule line:
+ *
+ * LoadModule  redurl_module   modules/mod_url.so
+ *
+ * 3. Activate the mod_url and set encoding variables properly:
+ * <IfModule mod_url.c>
+ *  CheckURL On
+ *  ServerEncoding EUC-KR
+ *  ClientEncoding UTF-8
+ * </IfModule>
  */
 
 module AP_MODULE_DECLARE_DATA redurl_module;
 
 typedef struct {
     int enabled;
+    const char *server_encoding;
+    const char *client_encoding;
+    iconv_t cd;
 } urlconfig;
 
 /*
@@ -102,6 +87,7 @@ static void *mkconfig(apr_pool_t *p)
     urlconfig *cfg = apr_pcalloc(p, sizeof(urlconfig));
 
     cfg->enabled = 0;
+    cfg->cd = 0;
     return cfg;
 }
 
@@ -122,6 +108,19 @@ static void *create_mconfig_for_directory(apr_pool_t *p, char *dir)
     return mkconfig(p);
 }
 
+static void *merge_mconfig_for_directory(apr_pool_t *p, void *basev, void *overridesv)
+{
+    urlconfig *a = (urlconfig *)apr_pcalloc (p, sizeof(urlconfig));
+    urlconfig *base = (urlconfig *)basev,
+        *over = (urlconfig *)overridesv;
+
+    a->server_encoding =
+        over->server_encoding ? over->server_encoding : base->server_encoding;
+    a->client_encoding =
+        over->client_encoding ? over->client_encoding : base->client_encoding;
+    return a;
+}
+
 /*
  * Handler for the CheckURL encoding directive, which is FLAG.
  */
@@ -133,6 +132,28 @@ static const char *set_redurl(cmd_parms *cmd, void *mconfig, int arg)
     return NULL;
 }
 
+/* ServerEncoding charset
+ */
+static const char *add_server_encoding(cmd_parms *cmd, void *mconfig,
+                                       const char *name)
+{
+    urlconfig *cfg = (urlconfig *) mconfig;
+
+    cfg->server_encoding = name;
+    return NULL;
+}
+
+/* ClientEncoding charset
+ */
+static const char *add_client_encoding(cmd_parms *cmd, void *mconfig,
+                                       const char *name)
+{
+    urlconfig *cfg = (urlconfig *) mconfig;
+
+    cfg->client_encoding = name;
+    return NULL;
+}
+
 /*
  * Define the directives specific to this module.  This structure is referenced
  * later by the 'module' structure.
@@ -141,6 +162,10 @@ static const command_rec redurl_cmds[] =
 {
     AP_INIT_FLAG("CheckURL", set_redurl, NULL, OR_OPTIONS,
                  "whether or not to fix mis-encoded URL requests"),
+    AP_INIT_TAKE1("ServerEncoding", add_server_encoding, NULL, OR_FILEINFO,
+                  "name of server encoding"),
+    AP_INIT_TAKE1("ClientEncoding", add_client_encoding, NULL, OR_FILEINFO,
+                  "name of client url encoding"),
     { NULL }
 };
 
@@ -208,51 +233,47 @@ static int check_redurl(request_rec *r)
     /* url = /correct-url */
     url = apr_pstrndup(r->pool, r->uri, (urlen - pglen));
 
-    /* 시작 */
-    ap_log_rerror(APLOG_MARK, APLOG_INFO, APR_SUCCESS, r,
+    /* start of main routine */
+    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 		 "Orig URL: %s %s url:%s",
 		 r->uri, good, url);
-
     {
-        static iconv_t cd = 0;
-//        const char *src = "안녕하세요";
-//        const char *src = "휟켝襤8�~T";
+	char *src = r->uri;
+	char buf[2048]="\0", *to; /* XXX */
+	size_t len,flen, tlen, ret;
+	if (cfg->cd == 0) {
+	    cfg->cd = iconv_open(cfg->server_encoding, cfg->client_encoding);
+	    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
+		"mod_url configuration: ServerEncoding %s, ClientEndoding %s",
+		cfg->server_encoding ? cfg->server_encoding : "unspecified",
+		cfg->client_encoding ? cfg->client_encoding : "unspecified");
+	    if (cfg->cd == (iconv_t)(-1)) {
+		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r,
+		    "incomplete configuration: ServerEncoding %s, ClientEndoding %s",
+		    cfg->server_encoding ? cfg->server_encoding : "unspecified",
+		    cfg->client_encoding ? cfg->client_encoding : "unspecified");
+		return DECLINED;
+	   }
+	}
+	flen = len = strlen(src);
+	tlen = 2*flen;
+	to= buf;
+	ret=iconv(cfg->cd, &src, &flen, &to, &tlen);
 
-	/*
-	 * glibc 2.2 patch by JoungKyun Kim
-	 *     -> 2th argument of iconv() is removed const
-	 */
-//        const char *src = r->uri;
-        char *src = r->uri;
-        char buf[2048]="\0", *to; /* XXX */
-        size_t len,flen, tlen,t;
-        if (cd == 0) {
-           cd = iconv_open("EUCKR", "UTF-8");
-        }
-        flen = len = strlen(src);
-        tlen = 2*flen;
-        to= buf;
-        // to = malloc(tlen);
-        t=iconv(cd, &src, &flen, &to, &tlen);
-
-        tlen=strlen(buf);
-	ap_log_rerror(APLOG_MARK, APLOG_INFO, APR_SUCCESS, r,
+	tlen=strlen(buf);
+	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 		 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
-		 r->uri,buf,len,tlen,t);
-       if (t >= 0
+		 r->uri,buf,len,tlen,ret);
+	if (ret >= 0
 #if __GLIBC_MINOR__ == 2
-	&& t == 0
+	&& ret == 0
 #endif
 	&& len != 0 && tlen != len) {
-	/* CHECK CODE 't' 에 대한 설명 */
-	/* t ==-1
-		URL이 이미 정상적인 EUCKR 인 경우:변환 필요 없는 경우 */
-	/* t == 0
-		정상적으로 UTF8 이 EUCKR 로 변환된 경우 */
-	/* t > 0
-		glibc 2.1.[2,3] 의 경우 변환된 문자열의 갯수를 돌려줌 */
-	/* flen == tlen 인 경우는 URL이 ascii일 경우 */
-	char *nuri;
+	/*
+	 * ret ==-1: URL is valid already: no need to convert 
+	 * ret > 0: strlen of converted URL in the glibc 2.1.[2,3]
+	 * flen == tlen then URL is ascii */
+	    char *nuri;
 
             nuri = apr_pstrcat(r->pool, buf,
 			       r->parsed_uri.query ? "?" : "",
@@ -270,7 +291,7 @@ static int check_redurl(request_rec *r)
        } else
             return DECLINED;
     } 
-    /* 끝 */
+    /* end of main routine */
 
     return OK;
 }
