@@ -63,7 +63,7 @@
 #include <iconv.h>
 
 /* mod_url.c:: fix mismatched URL encoding between server and clients
- *   by Won-kyu Park <wkpark@chem.skku.ac.kr>
+ *   by Won-kyu Park <wkpark@kldp.org>
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
  */
@@ -78,7 +78,7 @@
  *
  * Usage:
  *
- * 1. Compile it:
+ * 1. Compile:
  * /usr/sbin/apxs -i -a -c mod_url.c
  *
  * 2. Edit your conf/httpd.conf file, and add a LoadModule line:
@@ -139,7 +139,7 @@ static void *create_mconfig_for_directory(pool *p, char *dir)
 
 static void *merge_mconfig_for_directory(pool *p, void *basev, void *overridesv)
 {
-    urlconfig *a = (urlconfig *)apr_pcalloc (p, sizeof(urlconfig));
+    urlconfig *a = (urlconfig *)ap_pcalloc (p, sizeof(urlconfig));
     urlconfig *base = (urlconfig *)basev,
         *over = (urlconfig *)overridesv;
 
@@ -147,6 +147,8 @@ static void *merge_mconfig_for_directory(pool *p, void *basev, void *overridesv)
         over->server_encoding ? over->server_encoding : base->server_encoding;
     a->client_encoding =
         over->client_encoding ? over->client_encoding : base->client_encoding;
+    a->enabled = over->enabled;
+    a->cd = 0;
     return a;
 }
 
@@ -163,7 +165,7 @@ static const char *set_redurl(cmd_parms *cmd, void *mconfig, int arg)
 
 /* ServerEncoding charset
  */
-static const char *add_server_encoding(cmd_parms *cmd, void *mconfig,
+static const char *set_server_encoding(cmd_parms *cmd, void *mconfig,
                                        const char *name)
 {
     urlconfig *cfg = (urlconfig *) mconfig;
@@ -174,7 +176,7 @@ static const char *add_server_encoding(cmd_parms *cmd, void *mconfig,
 
 /* ClientEncoding charset
  */
-static const char *add_client_encoding(cmd_parms *cmd, void *mconfig,
+static const char *set_client_encoding(cmd_parms *cmd, void *mconfig,
                                        const char *name)
 {
     urlconfig *cfg = (urlconfig *) mconfig;
@@ -191,9 +193,9 @@ static const command_rec redurl_cmds[] =
 {
     { "CheckURL", set_redurl, NULL, OR_OPTIONS, FLAG,
       "whether or not to fix mis-encoded URL requests" },
-    { "ServerEncoding", add_server_encoding, NULL, OR_FILEINFO, FLAG,
+    { "ServerEncoding", set_server_encoding, NULL, OR_FILEINFO, TAKE1,
                   "name of server encoding"},
-    { "ClientEncoding", add_client_encoding, NULL, OR_FILEINFO, FLAG,
+    { "ClientEncoding", set_client_encoding, NULL, OR_FILEINFO, TAKE1,
                   "name of client url encoding"},
     { NULL }
 };
@@ -263,13 +265,14 @@ static int check_redurl(request_rec *r)
     url = ap_pstrndup(r->pool, r->uri, (urlen - pglen));
 
     /* ½ÃÀÛ */
-    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO | APLOG_INFO, r,
+    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
 		 "Orig URL: %s %s url:%s",
 		 r->uri, good, url);
 
     {
 	char *src = r->uri;
-	char buf[2048]="\0", *to; /* XXX */
+        char *buf, *to;
+        pool *p = r->pool;
 	size_t len, flen, tlen, ret;
 	if (cfg->cd == 0) {
 	    cfg->cd = iconv_open(cfg->server_encoding, cfg->client_encoding);
@@ -278,7 +281,7 @@ static int check_redurl(request_rec *r)
                 cfg->server_encoding ? cfg->server_encoding : "unspecified",
                 cfg->client_encoding ? cfg->client_encoding : "unspecified");
             if (cfg->cd == (iconv_t)(-1)) {
-                ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
+                ap_log_rerror(APLOG_MARK, APLOG_ERR, r,
                     "incomplete configuration: ServerEncoding %s, ClientEndoding %s",
                     cfg->server_encoding ? cfg->server_encoding : "unspecified",
                     cfg->client_encoding ? cfg->client_encoding : "unspecified");
@@ -286,14 +289,16 @@ static int check_redurl(request_rec *r)
 	    }
 	}
 	flen = len = strlen(src);
-	tlen = 2*flen;
+        tlen = flen * 4 + 1; /* MB_CUR_MAX ~ 4 */
+        buf = (char*)ap_pcalloc(p, tlen);
 	to= buf;
+
 	ret=iconv(cfg->cd, &src, &flen, &to, &tlen);
 
 	tlen=strlen(buf);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
 		 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
-		 r->uri,buf,len,tlen,ret);
+		 r->uri, buf, len, tlen, ret);
        if (ret >= 0
 #if __GLIBC_MINOR__ == 2
 	&& ret == 0
@@ -313,7 +318,7 @@ static int check_redurl(request_rec *r)
             ap_table_setn(r->headers_out, "Location",
 			  ap_construct_url(r->pool, nuri, r));
 
-            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO | APLOG_INFO, r,
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
 			 "Fixed URL: %s to %s",
 			 r->uri, nuri);
 
