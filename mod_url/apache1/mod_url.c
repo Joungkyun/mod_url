@@ -1,4 +1,3 @@
-#define WANT_BASENAME_MATCH
 /* ====================================================================
  * Copyright (c) 1996-1999 The Apache Group.  All rights reserved.
  *
@@ -63,17 +62,44 @@
 
 #include <iconv.h>
 
-/* mod_url.c - by Won-kyu Park <wkpark@chem.skku.ac.kr>
+/* mod_url.c:: fix mismatched URL encoding between server and clients
+ *   by Won-kyu Park <wkpark@chem.skku.ac.kr>
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
+ */
+
+/* ChangLog:
  *
- * Activate it with "CheckURL encoding On"
+ * 2000: initial release
+ * 2000/10/11: fix for glibc-2.1.x glibc-2.2
+ * 2002: fix for glibc-2.2 iconv: by JoungKyun Kim <http://www.oops.org>
+ * 2004/08/03: add 'ServerEncoding' 'ClientEncoding' options
+ *  - add per-dir support
+ *
+ * Usage:
+ *
+ * 1. Compile it:
+ * /usr/sbin/apxs -i -a -c mod_url.c
+ *
+ * 2. Edit your conf/httpd.conf file, and add a LoadModule line:
+ *
+ * LoadModule  redurl_module   modules/mod_url.so
+ *
+ * 3. Activate the mod_url and set encoding variables properly:
+ * <IfModule mod_url.c>
+ *  CheckURL On
+ *  ServerEncoding EUC-KR
+ *  ClientEncoding UTF-8
+ * </IfModule>
  */
 
 MODULE_VAR_EXPORT module redurl_module;
 
 typedef struct {
     int enabled;
+    const char *server_encoding;
+    const char *client_encoding;
+    iconv_t cd;
 } urlconfig;
 
 /*
@@ -110,6 +136,19 @@ static void *create_mconfig_for_directory(pool *p, char *dir)
     return mkconfig(p);
 }
 
+static void *merge_mconfig_for_directory(pool *p, void *basev, void *overridesv)
+{
+    urlconfig *a = (urlconfig *)apr_pcalloc (p, sizeof(urlconfig));
+    urlconfig *base = (urlconfig *)basev,
+        *over = (urlconfig *)overridesv;
+
+    a->server_encoding =
+        over->server_encoding ? over->server_encoding : base->server_encoding;
+    a->client_encoding =
+        over->client_encoding ? over->client_encoding : base->client_encoding;
+    return a;
+}
+
 /*
  * Handler for the CheckURL encoding directive, which is FLAG.
  */
@@ -121,6 +160,28 @@ static const char *set_redurl(cmd_parms *cmd, void *mconfig, int arg)
     return NULL;
 }
 
+/* ServerEncoding charset
+ */
+static const char *add_server_encoding(cmd_parms *cmd, void *mconfig,
+                                       const char *name)
+{
+    urlconfig *cfg = (urlconfig *) mconfig;
+
+    cfg->server_encoding = name;
+    return NULL;
+}
+
+/* ClientEncoding charset
+ */
+static const char *add_client_encoding(cmd_parms *cmd, void *mconfig,
+                                       const char *name)
+{
+    urlconfig *cfg = (urlconfig *) mconfig;
+
+    cfg->client_encoding = name;
+    return NULL;
+}
+
 /*
  * Define the directives specific to this module.  This structure is referenced
  * later by the 'module' structure.
@@ -129,6 +190,10 @@ static const command_rec redurl_cmds[] =
 {
     { "CheckURL", set_redurl, NULL, OR_OPTIONS, FLAG,
       "whether or not to fix mis-encoded URL requests" },
+    { "ServerEncoding", add_server_encoding, NULL, OR_FILEINFO, FLAG,
+                  "name of server encoding"},
+    { "ClientEncoding", add_client_encoding, NULL, OR_FILEINFO, FLAG,
+                  "name of client url encoding"},
     { NULL }
 };
 
@@ -202,45 +267,42 @@ static int check_redurl(request_rec *r)
 		 r->uri, good, url);
 
     {
-        static iconv_t cd = 0;
-//        const char *src = "안녕하세요";
-//        const char *src = "휟켝襤8�~T";
+	char *src = r->uri;
+	char buf[2048]="\0", *to; /* XXX */
+	size_t len, flen, tlen, ret;
+	if (cfg->cd == 0) {
+	    cfg->cd = iconv_open(cfg->server_encoding, cfg->client_encoding);
+            ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
+                "mod_url configuration: ServerEncoding %s, ClientEndoding %s",
+                cfg->server_encoding ? cfg->server_encoding : "unspecified",
+                cfg->client_encoding ? cfg->client_encoding : "unspecified");
+            if (cfg->cd == (iconv_t)(-1)) {
+                ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
+                    "incomplete configuration: ServerEncoding %s, ClientEndoding %s",
+                    cfg->server_encoding ? cfg->server_encoding : "unspecified",
+                    cfg->client_encoding ? cfg->client_encoding : "unspecified");
+                return DECLINED;
+	    }
+	}
+	flen = len = strlen(src);
+	tlen = 2*flen;
+	to= buf;
+	ret=iconv(cfg->cd, &src, &flen, &to, &tlen);
 
-	/*
-	 * glibc 2.2 patch by JoungKyun Kim
-	 *     -> 2th argument of iconv() is removed const
-	 */
-//        const char *src = r->uri;
-        char *src = r->uri;
-        char buf[2048]="\0", *to; /* XXX */
-        size_t len,flen, tlen,t;
-        if (cd == 0) {
-           cd = iconv_open("EUCKR", "UTF-8");
-        }
-        flen = len = strlen(src);
-        tlen = 2*flen;
-        to= buf;
-        // to = malloc(tlen);
-        t=iconv(cd, &src, &flen, &to, &tlen);
-
-        tlen=strlen(buf);
-        ap_log_rerror(APLOG_MARK, APLOG_NOERRNO | APLOG_INFO, r,
+	tlen=strlen(buf);
+	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, r,
 		 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
-		 r->uri,buf,len,tlen,t);
-       if (t >= 0
+		 r->uri,buf,len,tlen,ret);
+       if (ret >= 0
 #if __GLIBC_MINOR__ == 2
-	&& t == 0
+	&& ret == 0
 #endif
 	&& len != 0 && tlen != len) {
-	/* CHECK CODE 't' 에 대한 설명 */
-	/* t ==-1
-		URL이 이미 정상적인 EUCKR 인 경우:변환 필요 없는 경우 */
-	/* t == 0
-		정상적으로 UTF8 이 EUCKR 로 변환된 경우 */
-	/* t > 0
-		glibc 2.1.[2,3] 의 경우 변환된 문자열의 갯수를 돌려줌 */
-	/* flen == tlen 인 경우는 URL이 ascii일 경우 */
-	char *nuri;
+	/*
+	 * ret ==-1: URL is valid already: no need to convert
+	 * ret > 0: strlen of converted URL in the glibc 2.1.[2,3]
+	 * flen == tlen then URL is ascii */
+	    char *nuri;
 
             nuri = ap_pstrcat(r->pool, buf,
 			      r->parsed_uri.query ? "?" : "",
@@ -258,7 +320,7 @@ static int check_redurl(request_rec *r)
        } else
             return DECLINED;
     } 
-    /* 끝 */
+    /* end of main routine */
 
     return OK;
 }
@@ -268,17 +330,17 @@ module MODULE_VAR_EXPORT redurl_module =
     STANDARD_MODULE_STUFF,
     NULL,                       /* initializer */
     create_mconfig_for_directory,  /* create per-dir config */
-    NULL,                       /* merge per-dir config */
+    merge_mconfig_for_directory,   /* merge per-dir config */
     create_mconfig_for_server,  /* server config */
     NULL,                       /* merge server config */
-    redurl_cmds,               /* command table */
+    redurl_cmds,                /* command table */
     NULL,                       /* handlers */
     NULL,                       /* filename translation */
     NULL,                       /* check_user_id */
     NULL,                       /* check auth */
     NULL,                       /* check access */
     NULL,                       /* type_checker */
-    check_redurl,              /* fixups */
+    check_redurl,               /* fixups */
     NULL,                       /* logger */
     NULL,                       /* header parser */
     NULL,                       /* child_init */
