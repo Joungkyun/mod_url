@@ -116,6 +116,7 @@ static void *mkconfig(pool *p)
     urlconfig *cfg = ap_pcalloc(p, sizeof(urlconfig));
 
     cfg->enabled = 0;
+    cfg->cd = 0;
     return cfg;
 }
 
