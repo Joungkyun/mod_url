@@ -12,7 +12,7 @@
 # Roy Fielding removed useless code and added log/mail of new files
 # Ken Coar added special processing (i.e., no diffs) for binary files
 #
-# $Id: log_accum.pl,v 1.1 2004-09-16 11:10:45 wkpark Exp $
+# $Id: log_accum.pl,v 1.2 2004-09-16 15:10:19 wkpark Exp $
 
 ############################################################
 #
@@ -51,7 +51,7 @@ $SUMMARY_FILE  = "$TMPDIR/${FILE_PREFIX}files.summary";
 
 $CVSROOT       = $ENV{'CVSROOT'};
 
-$MAIL_TO       = 'moniwiki-commits@lists.kldp.net';
+$MAIL_TO       = 'modurl-commits@lists.kldp.net';
 $DOMAIN	       = 'users.kldp.net';
 #$MLISTHOST     = 'lists.sourceforge.net';
 
