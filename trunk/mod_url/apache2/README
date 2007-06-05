@@ -1,0 +1,54 @@
+mod_url README document for Apache 2
+# $Id: README,v 1.1 2007-06-05 19:50:35 oops Exp $
+
+mod_url is Apache module that fix mismatched URL encoding between server and client.
+This module is operated on Apache 2. For apache1 see also follow URL:
+http://modurl.kldp.net/ or http://kldp.net/projects/modurl/
+
+Current version is tested follw versions:
+    2.0.52
+    2.2.3
+
+Attension!!!:
+   Maybe this module does not Thread Safe. So, don't recommanded apache thread mpm!
+
+
+1. Compile
+
+   1.1 DSO build
+       shell> apxs -i -c mod_url.c
+
+       or do follow command on mod_url source directory
+
+       shell> make
+
+   1.2 static build
+       shell> cp -r mod_url/ /path/apache-src/src/modules/url
+       shell> rm /path/apache-src/src/modules/url/GNUmakefile
+       shell> cd /path/apache-src
+       shell> ./configure .... --enable-modules=all ..
+              or
+       shell> ./configure --enable-url=shared ...
+
+2. Usage
+
+   1. Edit your conf/httpd.conf file, and add a LoadModule line:
+
+      LoadModule  redurl_module   modules/mod_url.so
+
+   2. Activate the mod_url and set encoding variables properly:
+
+      <IfModule mod_url.c>
+          CheckURL On
+          ServerEncoding EUC-KR
+          ClientEncoding UTF-8
+      </IfModule>
+
+   3. support per directory config
+
+      <Directory /path/some>
+          <IfModule mod_url.c>
+              CheckURL Off
+          </IfModule>
+      </Directory>
+
