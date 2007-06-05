@@ -1,5 +1,7 @@
 mod_url README document
 
+# $Id: README,v 1.2 2007-06-05 19:41:48 oops Exp $
+
 mod_url is Apache module that fix mismatched URL encoding between server and client.
 This module is operated on Apache 1.x. For apache2 see also follow URL:
 http://modurl.kldp.net/ or http://kldp.net/projects/modurl/
