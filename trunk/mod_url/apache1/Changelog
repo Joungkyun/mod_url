@@ -1,0 +1,36 @@
+mod_url Apache module Changelog
+
+http://modurl.kldp.net
+
+* 2007/06/01 JoungKyun.Kim <http://oops.org>
+- rewrite check_redurl_encode with pointer
+- fixed segfault when fail memory allocation
+
+* 2007/05/31 JoungKyun.Kim <http://oops.org>
+- changed redurl design
+- add new check_redurl_encode function for IE7 with Apache License :-)
+
+* 2007/05/29 JoungKyun.Kim <http://oops.org>
+- added pre hooking function check_pre_redurl with no HTTP_MOVED_PERMANENTLY
+
+* 2007/05/27 JoungKyun.Kim <http://oops.org>
+- added check_redurl_encode function for IE7
+
+* 2004/11/21 JoungKyun.Kim <http://oops.org>
+- added default value of ServerEncoding and ClientEncoding option
+  ServerEncoding: EUC-KR
+  ClientEncoding: UTF-8
+
+* 2004/08/03 Won-kyu Park <wkpark@kldp.net>
+- add 'ServerEncoding' 'ClientEncoding' options
+- add per-dir support
+
+* 2002/07/09 JoungKyun.Kim <http://oops.org>
+- fixed for glibc-2.2 iconv
+
+* 2000/10/11 Won-kyu Park <wkpark@kldp.net>
+- fixed for glibc-2.1.x glibc-2.2
+
+* 2000/03/29 Won-kyu Park <wkpark@kldp.net>
+- Initial release
+
