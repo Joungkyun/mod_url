@@ -68,7 +68,7 @@
 /* mod_url.c:: fix mismatched URL encoding between server and clients
  *   by Won-kyu Park <wkpark@kldp.net>
  *      JoungKyun.Kim <http://oops.org>
- * $Id: mod_url.c,v 1.7 2007-06-05 17:53:57 oops Exp $
+ * $Id: mod_url.c,v 1.8 2007-06-05 18:01:03 oops Exp $
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
  */
@@ -151,7 +151,7 @@ static void *create_mconfig_for_directory(pool *p, char *dir)
 static void *merge_mconfig_for_directory(pool *p, void *basev, void *overridesv)
 {
 	urlconfig *a = (urlconfig *)ap_pcalloc (p, sizeof(urlconfig));
-	urlconfig *base = (urlconfig *)basev,
+	urlconfig *base = (urlconfig *)basev;
 	urlconfig *over = (urlconfig *)overridesv;
 
 	a->server_encoding =
