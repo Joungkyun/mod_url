@@ -66,9 +66,13 @@
 #define DEFAULT_CLIENT_ENCODING "UTF-8"
 
 /* mod_url.c:: fix mismatched URL encoding between server and clients
- *   by Won-kyu Park <wkpark@kldp.net>
- *      JoungKyun.Kim <http://oops.org>
- * $Id: mod_url.c,v 1.8.2.1 2007-06-06 11:32:43 oops Exp $
+ *             based on mod_spelling
+ *  Writer:
+ *    Won-kyu Park <wkpark@kldp.net>
+ *    JoungKyun.Kim <http://oops.org>
+ *  URL:
+ *    http://modurl.kldp.net
+ * $Id: mod_url.c,v 1.8.2.2 2007-06-06 11:43:29 oops Exp $
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
  */
