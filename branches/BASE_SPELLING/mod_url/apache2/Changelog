@@ -1,7 +1,11 @@
-mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.1.2.1 2007-06-06 11:39:03 oops Exp $
+mod_url Apache 2 module Changelog based on mod_spelling
+# $Id: Changelog,v 1.1.2.2 2007-06-06 11:40:44 oops Exp $
 
 http://modurl.kldp.net
+
+* 2007/06/06 JoungKyun.Kim <http://oops.org>
+- support IE7
+- added check_redurl_encode function
 
 * 2004/11/21 JoungKyun.Kim <http://oops.org>
 - added default value of ServerEncoding and ClientEncoding option
