@@ -1,5 +1,5 @@
 all:
-	/usr/sbin/apxs -i -a -c mod_url.c
+	/usr/sbin/apxs -i -c mod_url.c
 
 clean:
 	rm -r .libs mod_url.{la,lo,o,slo}
