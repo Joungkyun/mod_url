@@ -1,15 +1,7 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.1 2007-06-05 19:50:35 oops Exp $
+# $Id: Changelog,v 1.1.2.1 2007-06-06 11:39:03 oops Exp $
 
 http://modurl.kldp.net
-
-* 2007/06/01 JoungKyun.Kim <http://oops.org>
-- rewrite check_redurl_encode with pointer
-- fixed segfault when fail memory allocation
-
-* 2007/05/30 JoungKyun.Kim <http://oops.org>
-- changed redurl design
-- add new check_redurl_encode function for IE7 with Apache License :-)
 
 * 2004/11/21 JoungKyun.Kim <http://oops.org>
 - added default value of ServerEncoding and ClientEncoding option
