@@ -1,20 +1,9 @@
 mod_url Apache module Changelog
-# $Id: Changelog,v 1.2 2007-06-05 19:41:48 oops Exp $
+# $Id: Changelog,v 1.2.2.1 2007-06-06 11:32:29 oops Exp $
 
 http://modurl.kldp.net
 
-* 2007/06/01 JoungKyun.Kim <http://oops.org>
-- rewrite check_redurl_encode with pointer
-- fixed segfault when fail memory allocation
-
-* 2007/05/31 JoungKyun.Kim <http://oops.org>
-- changed redurl design
-- add new check_redurl_encode function for IE7 with Apache License :-)
-
-* 2007/05/29 JoungKyun.Kim <http://oops.org>
-- added pre hooking function check_pre_redurl with no HTTP_MOVED_PERMANENTLY
-
-* 2007/05/27 JoungKyun.Kim <http://oops.org>
+* 2007/06/06 JoungKyun.Kim <http://oops.org>
 - added check_redurl_encode function for IE7
 
 * 2004/11/21 JoungKyun.Kim <http://oops.org>
