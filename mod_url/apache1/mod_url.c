@@ -68,25 +68,12 @@
 /* mod_url.c:: fix mismatched URL encoding between server and clients
  *   by Won-kyu Park <wkpark@kldp.net>
  *      JoungKyun.Kim <http://oops.org>
- * $Id: mod_url.c,v 1.8 2007-06-05 18:01:03 oops Exp $
+ * $Id: mod_url.c,v 1.8.2.1 2007-06-06 11:32:43 oops Exp $
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
  */
 
-/* ChangLog:
- *
- * 2000: initial release
- * 2000/10/11: fix for glibc-2.1.x glibc-2.2
- * 2002: fix for glibc-2.2 iconv: by JoungKyun.Kim <http://oops.org>
- * 2004/08/03: add 'ServerEncoding' 'ClientEncoding' options
- *  - add per-dir support
- * 2004/11/25: fix #300597: set default values for ServerEncoding and ClientEncoding
- * 2004/11/25: fix #300597:
- *  - check 'ServerEncoding' and 'ClientEncoding' before iconv_open()
- * 2007/06/06: merged cvs.oops.org version
- *  - added default value of ServerEncoding and ClientEncoding option
- *    by JoungKyun.Kim <http://oops.org>
- *
+/*
  * Usage:
  *
  * 1. Compile:
@@ -211,6 +198,42 @@ static const command_rec redurl_cmds[] =
 	{ NULL }
 };
 
+char * check_redurl_encode (const char * str, int len, int * retlen)
+{
+	static unsigned char hexs[] = "0123456789ABCDEF";
+	unsigned char * o, * r;
+	unsigned char * s;
+	int l;
+
+	r = (unsigned char *) malloc (sizeof (char) * (len * 3 + 1));
+	if ( r == NULL )
+		return NULL;
+
+	o = r;
+	s = (unsigned char *) str;
+
+	while ( len-- ) {
+		/* ASCII area */
+		if ( *s > 32 && *s < 127 ) {
+			*o++ = *s++;
+			l++;
+			continue;
+		}
+
+		*o++ = 37;
+		*o++ = hexs[*s >> 0x4];
+		*o++ = hexs[*s++ & 0xf];
+		l += 3;
+	}
+	*o = 0;
+
+	if ( retlen )
+		*retlen = l;
+
+	return (char *) r;
+}
+
+
 static int check_redurl(request_rec *r)
 {
 	urlconfig *cfg;
@@ -323,11 +346,15 @@ static int check_redurl(request_rec *r)
 			 * ret > 0: strlen of converted URL in the glibc 2.1.[2,3]
 			 * flen == tlen then URL is ascii */
 			char *nuri;
+			char *enc = check_redurl_encode (buf, strlen (buf), NULL);
 
-			nuri = ap_pstrcat(r->pool, buf,
+			nuri = ap_pstrcat(r->pool, enc,
 							r->parsed_uri.query ? "?" : "",
 							r->parsed_uri.query ? r->parsed_uri.query : "",
 							NULL);
+
+			if ( enc )
+				free (enc);
 
 			ap_table_setn(r->headers_out, "Location",
 						ap_construct_url(r->pool, nuri, r));
