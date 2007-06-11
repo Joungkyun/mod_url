@@ -1,7 +1,10 @@
 mod_url Apache module Changelog
-# $Id: Changelog,v 1.2 2007-06-05 19:41:48 oops Exp $
+# $Id: Changelog,v 1.3 2007-06-11 08:01:20 oops Exp $
 
 http://modurl.kldp.net
+
+* 2007/06/11 JoungKyun.Kim <http://oops.org>j
+- fixed gabage character of iconv return value
 
 * 2007/06/01 JoungKyun.Kim <http://oops.org>
 - rewrite check_redurl_encode with pointer
