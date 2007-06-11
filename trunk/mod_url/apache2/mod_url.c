@@ -52,7 +52,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.7 2007-06-05 19:50:35 oops Exp $
+ * $Id: mod_url.c,v 1.8 2007-06-11 08:02:14 oops Exp $
  */
 
 /*
@@ -270,7 +270,8 @@ void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * 
 		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 				"check_redurl_iconv: iconv convert end   -------------------");
 		return;
-	}
+	} else
+		memset (ic->uri, 0, sizeof (char) * tlen);
 
 	ic->alloc = 1;
 	to = ic->uri;
