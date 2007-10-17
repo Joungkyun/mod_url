@@ -5,7 +5,9 @@
  * URL     :
  *          http://oops.org
  *          http://modurl.kldp.net
- * $Id: mod_url.c,v 1.1 2007-10-17 19:46:27 oops Exp $
+ * $Id: mod_url.c,v 1.2 2007-10-17 19:50:39 oops Exp $
+ *
+ * License of this module follows GPL v2.
  */
 
 #define _GNU_SOURCE

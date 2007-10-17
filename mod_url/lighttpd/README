@@ -1,8 +1,10 @@
 mod_url README document for Lighttpd
-# $Id: README,v 1.1 2007-10-17 19:46:27 oops Exp $
+# $Id: README,v 1.2 2007-10-17 19:50:39 oops Exp $
 
 mod_url is lighttpd module that fix mismatched URL encoding between server and client.
 This module is operated on lighttpd 1.4.x.
+
+License follows GPL v2.
 
 1. Compile
 
