@@ -1,0 +1,57 @@
+diff -urNp lighttpd-1.4.18.org/src/Makefile.am lighttpd-1.4.18/src/Makefile.am
+--- lighttpd-1.4.18.org/src/Makefile.am	2007-09-03 07:23:53.000000000 +0900
++++ lighttpd-1.4.18/src/Makefile.am	2007-10-18 04:16:03.000000000 +0900
+@@ -241,6 +241,10 @@ mod_accesslog_la_SOURCES = mod_accesslog
+ mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
+ mod_accesslog_la_LIBADD = $(common_libadd)
+ 
++lib_LTLIBRARIES += mod_url.la
++mod_url_la_SOURCES = mod_url.c
++mod_url_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
++mod_url_la_LIBADD = $(common_libadd)
+ 
+ hdr = server.h buffer.h network.h log.h keyvalue.h \
+       response.h request.h fastcgi.h chunk.h \
+diff -urNp lighttpd-1.4.18.org/src/Makefile.in lighttpd-1.4.18/src/Makefile.in
+--- lighttpd-1.4.18.org/src/Makefile.in	2007-09-10 04:55:29.000000000 +0900
++++ lighttpd-1.4.18/src/Makefile.in	2007-10-18 04:18:49.000000000 +0900
+@@ -321,6 +321,12 @@ mod_webdav_la_OBJECTS = $(am_mod_webdav_
+ mod_webdav_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mod_webdav_la_CFLAGS) \
+ 	$(CFLAGS) $(mod_webdav_la_LDFLAGS) $(LDFLAGS) -o $@
++mod_url_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
++am_mod_url_la_OBJECTS = mod_url.lo
++mod_url_la_OBJECTS = $(am_mod_url_la_OBJECTS)
++mod_url_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
++	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
++	$(mod_url_la_LDFLAGS) $(LDFLAGS) -o $@
+ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+ sbinPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+ PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS) $(sbin_PROGRAMS)
+@@ -721,6 +727,9 @@ mod_status_la_LIBADD = $(common_libadd)
+ mod_accesslog_la_SOURCES = mod_accesslog.c
+ mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
+ mod_accesslog_la_LIBADD = $(common_libadd)
++mod_url_la_SOURCES = mod_url.c
++mod_url_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
++mod_url_la_LIBADD = $(common_libadd)
+ hdr = server.h buffer.h network.h log.h keyvalue.h \
+       response.h request.h fastcgi.h chunk.h \
+       settings.h http_chunk.h http_auth_digest.h \
+@@ -882,6 +891,8 @@ mod_usertrack.la: $(mod_usertrack_la_OBJ
+ 	$(mod_usertrack_la_LINK) -rpath $(libdir) $(mod_usertrack_la_OBJECTS) $(mod_usertrack_la_LIBADD) $(LIBS)
+ mod_webdav.la: $(mod_webdav_la_OBJECTS) $(mod_webdav_la_DEPENDENCIES) 
+ 	$(mod_webdav_la_LINK) -rpath $(libdir) $(mod_webdav_la_OBJECTS) $(mod_webdav_la_LIBADD) $(LIBS)
++mod_url.la: $(mod_url_la_OBJECTS) $(mod_url_la_DEPENDENCIES) 
++	$(mod_url_la_LINK) -rpath $(libdir) $(mod_url_la_OBJECTS) $(mod_url_la_LIBADD) $(LIBS)
+ install-binPROGRAMS: $(bin_PROGRAMS)
+ 	@$(NORMAL_INSTALL)
+ 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
+@@ -1078,6 +1089,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mod_userdir.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mod_usertrack.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mod_webdav_la-mod_webdav.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mod_url.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/network.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/network_freebsd_sendfile.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/network_linux_sendfile.Po@am__quote@
