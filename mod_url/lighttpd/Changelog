@@ -1,0 +1,8 @@
+mod_url Lighttpd module changelog
+# $Id: Changelog,v 1.1 2007-10-17 19:46:27 oops Exp $
+
+http://modurl.kldp.net
+http://oops.org
+
+* 2007/10/18 JoungKyun.Kim <http://oops.org>
+- init

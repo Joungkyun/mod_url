@@ -1,0 +1,52 @@
+mod_url README document for Lighttpd
+# $Id: README,v 1.1 2007-10-17 19:46:27 oops Exp $
+
+mod_url is lighttpd module that fix mismatched URL encoding between server and client.
+This module is operated on lighttpd 1.4.x.
+
+1. Compile
+
+   First, patch the lighttpd-mod-url.patch and mod_url.c is located
+   in lighttpd-src/src directory.
+
+   And, build lighttpd
+   shell> ./configure
+   shell> make
+   shell> make install
+
+2. Usage
+
+   1. Edit your lighttpd configuration file.
+
+      Regist mod_url module on server.module directive.
+
+      server.modules = (
+           ...,
+           "mod_url"
+      )
+
+   2. Activate the mod_url and set encoding variables properly:
+
+      url.debug           :
+
+        Default value is disable [enable/disable]
+
+        Print debug messages at error log file.
+
+      url.enabled         :
+
+        Default value is disable [enable/disable]
+
+        Activate mod_url.
+
+      url.server_encoding :
+
+        default value is EUC-KR
+
+        Encoding of Server side. Value is must one of iconv's ENCODINGs
+
+      url.client_encoding :
+
+        default value is UTF-8
+
+        Encoding of Client side. Value is must one of iconv's ENCODINGs
