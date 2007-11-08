@@ -75,7 +75,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.10 2007-06-11 08:01:20 oops Exp $
+ * $Id: mod_url.c,v 1.11 2007-11-08 18:38:29 oops Exp $
  */
 
 /*
@@ -496,6 +496,8 @@ static int check_redurl (request_rec * r)
 	 * 301 HTTP_MOVED_PERMANENTLY with converted URL
 	 */
 	if ( ric_r == REDURL_ICONV_FALSE ) {
+		free (realpath);
+
 		/* working ready */
 		ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
 				"  Goto => %s", ap_construct_url (r->pool, c_uri, r));
