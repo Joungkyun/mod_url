@@ -75,7 +75,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.11 2007-11-08 18:38:29 oops Exp $
+ * $Id: mod_url.c,v 1.12 2007-11-08 18:45:27 oops Exp $
  */
 
 /*
@@ -496,6 +496,7 @@ static int check_redurl (request_rec * r)
 	 * 301 HTTP_MOVED_PERMANENTLY with converted URL
 	 */
 	if ( ric_r == REDURL_ICONV_FALSE ) {
+		check_redurl_iconv_free (ric);
 		free (realpath);
 
 		/* working ready */
