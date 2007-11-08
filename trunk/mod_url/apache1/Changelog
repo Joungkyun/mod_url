@@ -1,9 +1,12 @@
 mod_url Apache module Changelog
-# $Id: Changelog,v 1.3 2007-06-11 08:01:20 oops Exp $
+# $Id: Changelog,v 1.4 2007-11-08 18:45:27 oops Exp $
 
 http://modurl.kldp.net
 
-* 2007/06/11 JoungKyun.Kim <http://oops.org>j
+* 2007/11/09 JoungKyun.Kim <http://oops.org>
+- fixed memory leak
+
+* 2007/06/11 JoungKyun.Kim <http://oops.org>
 - fixed gabage character of iconv return value
 
 * 2007/06/01 JoungKyun.Kim <http://oops.org>
