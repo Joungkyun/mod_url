@@ -1,10 +1,11 @@
 mod_url Apache module Changelog
-# $Id: Changelog,v 1.4 2007-11-08 18:45:27 oops Exp $
+# $Id: Changelog,v 1.5 2007-11-09 09:16:24 oops Exp $
 
 http://modurl.kldp.net
 
 * 2007/11/09 JoungKyun.Kim <http://oops.org>
 - fixed memory leak
+- bug #304629: fixed content-type ploblems on internal replace path mode
 
 * 2007/06/11 JoungKyun.Kim <http://oops.org>
 - fixed gabage character of iconv return value
