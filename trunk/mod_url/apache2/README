@@ -1,28 +1,68 @@
 mod_url README document for Apache 2
-# $Id: README,v 1.1 2007-06-05 19:50:35 oops Exp $
+
+# $Id: README,v 1.2 2007-11-09 18:25:58 oops Exp $
 
 mod_url is Apache module that fix mismatched URL encoding between server and client.
 This module is operated on Apache 2. For apache1 see also follow URL:
 http://modurl.kldp.net/ or http://kldp.net/projects/modurl/
 
 Current version is tested follw versions:
-    2.0.52
-    2.2.3
+    2.0.59
+    2.2 (Don't check yet. Maybe will operate..)
 
 Attension!!!:
    Maybe this module does not Thread Safe. So, don't recommanded apache thread mpm!
 
 
-1. Compile
+1. Overview
 
-   1.1 DSO build
+   working follows. if your configuration as follows..
+
+   SERVER_ENCODING EUC-KR
+   CLIENT_ENCODING UTF-8
+
+   1. Main server
+      http://modurl.kldp.net/%ED%95%9C%EA%B8%80/info.php
+
+      replace internal path of r->uri, r->unparsed_uri and r->parsed_uri.path
+      On filename translation hook, replace %ED%95%9C%EA%B8%80 to
+      %C7%D1%B1%DB.
+
+   2. Virtual Host
+      http://modurl.kldp.net/%ED%95%9C%EA%B8%80/info.php
+
+      http://modurl.kldp.net/%ED%95%9C%EA%B8%80/info.php
+
+      replace internal path of r->uri, r->unparsed_uri and r->parsed_uri.path
+      On filename translation hook, replace %ED%95%9C%EA%B8%80 to
+      %C7%D1%B1%DB.
+
+   3. Virtual Host Alias module
+      use 304 Redirection on fixups hook
+
+   4. UserDir
+      http://modurl.kldp.net/%ED%95%9C%EA%B8%80/info.php
+
+      http://modurl.kldp.net/%ED%95%9C%EA%B8%80/info.php
+
+      replace internal path of r->uri, r->unparsed_uri and r->parsed_uri.path
+      On filename translation hook, replace %ED%95%9C%EA%B8%80 to
+      %C7%D1%B1%DB.
+
+      If apache server hasn't mod_userdir module, use 304 Redirection
+      on fixups hook
+
+
+2. Compile
+
+   2.1 DSO build
        shell> apxs -i -c mod_url.c
 
        or do follow command on mod_url source directory
 
        shell> make
 
-   1.2 static build
+   2.2 static build
        shell> cp -r mod_url/ /path/apache-src/src/modules/url
        shell> rm /path/apache-src/src/modules/url/GNUmakefile
        shell> cd /path/apache-src
@@ -30,25 +70,45 @@ Attension!!!:
               or
        shell> ./configure --enable-url=shared ...
 
+   2.3 Warn!
+       mod_url has dependency of mod_userdir. If your apache don't include
+       mod_userdir module, you can build with follows.
+
+       2.3.1 DOS build
+           shell> apxs -i -c -DURL_NOUSERDIR mod_url.c
+
+           or do follow command on mod_url source directory
+
+           shell> make EXTRA_CFLAGS="-DURL_NOUSERDIR"
+
+       2.3.2 static build
+           shell> EXTRA_CFLAGS="-DURL_NOUSERDIR" ./configure ... --add-module=mod_url.c ..
+
 2. Usage
 
-   1. Edit your conf/httpd.conf file, and add a LoadModule line:
+   3.1 Edit your conf/httpd.conf file, and add a LoadModule line:
 
-      LoadModule  redurl_module   modules/mod_url.so
+       LoadModule  redurl_module   modules/mod_url.so
 
-   2. Activate the mod_url and set encoding variables properly:
+       If you built with no URL_NOUSERDIR build constant, be careful after load
+       mod_userdir then, load mod_url.
 
-      <IfModule mod_url.c>
-          CheckURL On
-          ServerEncoding EUC-KR
-          ClientEncoding UTF-8
-      </IfModule>
+       LoadModule  userdir_module   modules/mod_userdir.so
+       LoadModule  redurl_module    modules/mod_url.so
 
-   3. support per directory config
+   3.2 Activate the mod_url and set encoding variables properly:
 
-      <Directory /path/some>
-          <IfModule mod_url.c>
-              CheckURL Off
-          </IfModule>
-      </Directory>
+       <IfModule mod_url.c>
+           CheckURL On
+           ServerEncoding EUC-KR
+           ClientEncoding UTF-8
+       </IfModule>
+
+   3.3 support per directory config
+
+       <Directory /path/some>
+           <IfModule mod_url.c>
+               CheckURL Off
+           </IfModule>
+       </Directory>
 
