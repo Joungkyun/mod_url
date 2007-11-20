@@ -76,7 +76,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.13 2007-11-09 09:16:24 oops Exp $
+ * $Id: mod_url.c,v 1.14 2007-11-20 17:24:56 oops Exp $
  */
 
 /*
@@ -326,7 +326,7 @@ void check_redurl_iconv_free (iconv_s * ic)
 int check_redurl_iconv_result (iconv_s * ic)
 {
 	if ( ic->ret >= 0
-#if __GLIBC_MINOR__ == 2
+#if __GLIBC_MINOR__ >= 2
 		&& ic->ret == 0
 #endif
 		&& ic->len != 0 && ic->tlen != ic->len )

@@ -1,7 +1,10 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.4 2007-11-09 18:25:58 oops Exp $
+# $Id: Changelog,v 1.5 2007-11-20 17:24:19 oops Exp $
 
 http://modurl.kldp.net
+
+* 2007/11/21 JoungKyun.Kim <http://oops.org>
+- bug #304642: under over glibc 2.3, miss checking iconv result status
 
 * 2007/11/10 JoungKyun.Kim <http://oops.org>
 - bug #304629: fixed content-type ploblems on internal replace path mode
