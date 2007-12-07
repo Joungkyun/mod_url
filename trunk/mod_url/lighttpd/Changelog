@@ -1,8 +1,11 @@
 mod_url Lighttpd module changelog
-# $Id: Changelog,v 1.1 2007-10-17 19:46:27 oops Exp $
+# $Id: Changelog,v 1.2 2007-12-07 06:27:36 oops Exp $
 
 http://modurl.kldp.net
 http://oops.org
+
+* 2007/12/07 JoungKyun.Kim <http://oops.org>
+- bug #304679: fixed ugly mod_url patch file for lighttpd 1.4.18
 
 * 2007/10/18 JoungKyun.Kim <http://oops.org>
 - init
