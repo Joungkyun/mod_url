@@ -31,17 +31,27 @@
 #include "http_log.h"
 
 #include <iconv.h>
+#ifndef WIN32
 #include <pwd.h>
+#endif
 
 #ifndef _UNISTD_H
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #endif
 #ifndef _SYS_STAT_H
 #include <sys/stat.h>
 #endif
 
+#ifdef WINNT
+#define REDURL_SERVER_ENCODING "UTF-8"
+#define REDURL_CLIENT_ENCODING "EUC-KR"
+#else
 #define REDURL_SERVER_ENCODING "EUC-KR"
 #define REDURL_CLIENT_ENCODING "UTF-8"
+#endif
+
 #define REDURL_ICONV_TRUE 0
 #define REDURL_ICONV_FALSE 1
 
@@ -53,7 +63,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.12 2007-11-20 17:24:19 oops Exp $
+ * $Id: mod_url.c,v 1.13 2007-12-24 08:28:29 oops Exp $
  */
 
 /*
@@ -245,6 +255,14 @@ void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * 
 
 	s_enc = cfg->server_encoding ? cfg->server_encoding : REDURL_SERVER_ENCODING;
 	c_enc = cfg->client_encoding ? cfg->client_encoding : REDURL_CLIENT_ENCODING;
+
+#ifdef WINNT
+	if ( strcasecmp (s_enc, "UTF-8") && strcasecmp (s_enc, "UTF8") ) {
+		ap_log_rerror(APLOG_MARK, APLOG_ERR, APR_INCOMPLETE, r,
+				"ServerEncoding force to set UTF-8 on Windows NT System");
+		s_enc = REDURL_SERVER_ENCODING;
+	}
+#endif
 
 	ic->alloc = 0;
 
@@ -561,6 +579,8 @@ static int pre_redurl (request_rec * r) {
 	 */
 	ap_no2slash (r->uri);
 
+#ifndef WINNT
+
 	/* Account access : /~user */
 	if ( r->uri[0] == '/' && r->uri[1] == '~' ) {
 #ifndef URL_NOUSERDIR
@@ -751,6 +771,10 @@ static int pre_redurl (request_rec * r) {
 
 	check_redurl_iconv_free (ric);
 
+#else
+	realpath = strdup ("Don't support on WINNT mode");
+#endif /* end of ifndef WINNT */
+
 	/* convert init uri */
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r, "Pre URI Converting");
 
@@ -803,7 +827,9 @@ static int pre_redurl (request_rec * r) {
 static void register_hooks (apr_pool_t * p)
 {
 	ap_hook_translate_name (pre_redurl, NULL, NULL, APR_HOOK_LAST);
+#ifndef WINNT
 	ap_hook_fixups (check_redurl, NULL, NULL, APR_HOOK_LAST);
+#endif
 }
 
 module AP_MODULE_DECLARE_DATA redurl_module =
