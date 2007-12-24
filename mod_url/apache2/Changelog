@@ -1,7 +1,10 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.5 2007-11-20 17:24:19 oops Exp $
+# $Id: Changelog,v 1.6 2007-12-24 08:28:29 oops Exp $
 
 http://modurl.kldp.net
+
+* 2007/12/24 JoungKyun.Kim <http://oops.org>
+- patch #304683: support Windows NT system
 
 * 2007/11/21 JoungKyun.Kim <http://oops.org>
 - bug #304642: under over glibc 2.3, miss checking iconv result status

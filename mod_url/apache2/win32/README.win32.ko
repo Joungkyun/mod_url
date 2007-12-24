@@ -1,0 +1,48 @@
+mod_url Windows NT system README document for Apache 2
+
+# Id: $
+
+이 문서는 윈도우즈 NT 시스템에서의 mod_url 작동에 대한 사항을 설명한다.
+
+현 버전은 다음 apache 버전에서 테스트 되었습니다:
+    2.0.59
+    2.2.6
+
+1. 개요
+
+   윈도우즈 NT 시스템 (windows 95/98/ME 가 아닌..) 에서 apache 2는 입력 URL 이
+   무조건 UTF-8 로 전송을 된다는 가정하에 강제로 EUC-KR로 변환을 하도록 작동을
+   하고 있다. 그렇기 때문에 EUC-KR로 된 URI가 입력이 될 경우, 정상적인 파일 전
+   송이 이루어 지지 않는 문제가 있다.
+
+   즉, mod_url이 할 일을 apache 2가 하고 있다는 얘기도 된다. 그러므로 윈도우즈
+   NT 시스템에서의 mod_url은 기존의 작동과는 다르게 UTF-8이 아닌 문자셋으로 입
+   력되는 URL을 UTF-8로 변경하는 작업만 하도록 작동을 하게 된다.
+
+   Windows 95/98/ME 에서의 작동은 확인을 하지 못했으나, \DWINNT 옵션만 주지 않
+   고 UNIX 버전과 동일하게 사용을 하면 될 것으로 추측한다.
+
+2. 컴파일
+
+   http://modurl.kldp.org에서는 공식적으로 Windows 환경에 대하여 지원하지 않는
+   다. 이유는 windows 환경에서의 개발환경이 되지를 못하고, 능력(?)도 없기 때문
+   이다.
+
+   mod_url의 Windows 환경에서의 사용은 D.I.Y를 하든지 또는 박양배님의 일부글들
+   을 참조하도록 한다.
+
+   기본적으로는, 박양배님이 작성하신 이 디렉토리의 win32_compile.bat을 참고 하
+   도록 하고, 컴파일 환경에 대해서는 아래의 URL을 참조하도록 한다.
+
+   http://kldp.net/forum/forum.php?thread_id=18406&forum_id=1710
+   http://kldp.net/tracker/index.php?func=detail&aid=304683
+
+   정상적으로 빌드, 작동 시키려면 \DWINNT, \DWIN32 옵션을 컴파일 옵션으로 넘겨
+   주어야 한다.
+
+3. 설정
+
+   기본적으로는 일반적인 mod_url 설정을 따르면 된다. 차이점은 ServerEncoding은
+   무조건 UTF-8 이 되어야 한다. UTF-8 이 아닌 다른 문자셋으로 설정을 하더라도,
+   코드에서 static 하게 UTF-8로 수정이 된다.
+
