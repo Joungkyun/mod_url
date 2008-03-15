@@ -307,7 +307,7 @@ static int check_redurl(request_rec *r)
 			 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
 			 r->uri, buf, len, tlen, ret);
 		if (ret >= 0
-#if __GLIBC_MINOR__ == 2
+#if __GLIBC_MINOR__ >= 2
 			&& ret == 0
 #endif
 			&& len != 0 && tlen != len) {
