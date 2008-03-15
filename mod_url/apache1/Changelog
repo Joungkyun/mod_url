@@ -1,7 +1,10 @@
 mod_url Apache module based on mod_spelling Changelog
-# $Id: Changelog,v 1.2.2.2 2007-06-06 11:43:29 oops Exp $
+# $Id: Changelog,v 1.2.2.3 2008-03-15 08:58:14 oops Exp $
 
 http://modurl.kldp.net
+
+* 2008/03/15 JoungKyun.Kim <http://oops.org>
+- bug #304642: under over glibc 2.3, miss checking iconv result status
 
 * 2007/06/06 JoungKyun.Kim <http://oops.org>
 - added check_redurl_encode function for IE7

@@ -72,7 +72,7 @@
  *    JoungKyun.Kim <http://oops.org>
  *  URL:
  *    http://modurl.kldp.net
- * $Id: mod_url.c,v 1.8.2.2 2007-06-06 11:43:29 oops Exp $
+ * $Id: mod_url.c,v 1.8.2.3 2008-03-15 08:58:14 oops Exp $
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
  */
@@ -341,7 +341,7 @@ static int check_redurl(request_rec *r)
 			 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
 			 r->uri, buf, len, tlen, ret);
 		if (ret >= 0
-#if __GLIBC_MINOR__ == 2
+#if __GLIBC_MINOR__ >= 2
 			&& ret == 0
 #endif
 			&& len != 0 && tlen != len) {
