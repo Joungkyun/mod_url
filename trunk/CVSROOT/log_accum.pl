@@ -12,7 +12,7 @@
 # Roy Fielding removed useless code and added log/mail of new files
 # Ken Coar added special processing (i.e., no diffs) for binary files
 #
-# $Id: log_accum.pl,v 1.2 2004-09-16 15:10:19 wkpark Exp $
+# $Id: log_accum.pl,v 1.3 2008-04-30 04:16:02 wkpark Exp $
 
 ############################################################
 #
@@ -52,6 +52,7 @@ $SUMMARY_FILE  = "$TMPDIR/${FILE_PREFIX}files.summary";
 $CVSROOT       = $ENV{'CVSROOT'};
 
 $MAIL_TO       = 'modurl-commits@lists.kldp.net';
+$MAIL_LIST     = 'Modurl commit list';
 $DOMAIN	       = 'users.kldp.net';
 #$MLISTHOST     = 'lists.sourceforge.net';
 
@@ -300,12 +301,12 @@ sub mail_notification
     open(MAIL, "| /usr/sbin/sendmail $MAIL_TO");
 
     print(MAIL "From: $login <$login\@$DOMAIN\n");
-    print(MAIL "To: MoniWiki Mailing List <$MAIL_TO>\n");
+    print(MAIL "To: $MAIL_LIST <$MAIL_TO>\n");
     $subject = "Subject: $ARGV[0]";
     if ($subject ne "") {
 	print(MAIL $subject, "\n");
     }
-    print(MAIL "Content-Type: text/plain; charset=euc-kr\n");
+    print(MAIL "Content-Type: text/plain; charset=UTF-8\n");
     print(MAIL "Content-Transfer-Encoding: 8bit\n");
     print(MAIL "\n");
     print(MAIL join("\n", @text));
