@@ -1,7 +1,7 @@
-diff -urNp lighttpd-1.4.18.org/configure lighttpd-1.4.18/configure
---- lighttpd-1.4.18.org/configure	2007-09-10 04:55:31.000000000 +0900
-+++ lighttpd-1.4.18/configure	2007-12-07 15:19:53.000000000 +0900
-@@ -29654,7 +29654,7 @@ fi
+diff -urNp lighttpd-1.4.19.org/configure lighttpd-1.4.19/configure
+--- lighttpd-1.4.19.org/configure	2008-03-11 06:46:12.000000000 +0900
++++ lighttpd-1.4.19/configure	2008-07-06 16:46:39.000000000 +0900
+@@ -29690,7 +29690,7 @@ fi
  
  
  
@@ -10,10 +10,10 @@ diff -urNp lighttpd-1.4.18.org/configure lighttpd-1.4.18/configure
  
  plugins="mod_rewrite mod_redirect mod_ssi mod_trigger_b4_dl"
  features="regex-conditionals"
-diff -urNp lighttpd-1.4.18.org/configure.in lighttpd-1.4.18/configure.in
---- lighttpd-1.4.18.org/configure.in	2007-08-29 09:49:56.000000000 +0900
-+++ lighttpd-1.4.18/configure.in	2007-12-07 15:20:23.000000000 +0900
-@@ -539,7 +539,7 @@ AC_CONFIG_FILES([Makefile src/Makefile d
+diff -urNp lighttpd-1.4.19.org/configure.in lighttpd-1.4.19/configure.in
+--- lighttpd-1.4.19.org/configure.in	2008-03-11 04:15:27.000000000 +0900
++++ lighttpd-1.4.19/configure.in	2008-07-06 16:46:43.000000000 +0900
+@@ -558,7 +558,7 @@ AC_CONFIG_FILES([Makefile src/Makefile d
  AC_OUTPUT
  
  
@@ -22,10 +22,10 @@ diff -urNp lighttpd-1.4.18.org/configure.in lighttpd-1.4.18/configure.in
  
  plugins="mod_rewrite mod_redirect mod_ssi mod_trigger_b4_dl"
  features="regex-conditionals"
-diff -urNp lighttpd-1.4.18.org/src/Makefile.am lighttpd-1.4.18/src/Makefile.am
---- lighttpd-1.4.18.org/src/Makefile.am	2007-09-03 07:23:53.000000000 +0900
-+++ lighttpd-1.4.18/src/Makefile.am	2007-12-07 15:20:51.000000000 +0900
-@@ -241,6 +241,10 @@ mod_accesslog_la_SOURCES = mod_accesslog
+diff -urNp lighttpd-1.4.19.org/src/Makefile.am lighttpd-1.4.19/src/Makefile.am
+--- lighttpd-1.4.19.org/src/Makefile.am	2008-02-27 01:21:09.000000000 +0900
++++ lighttpd-1.4.19/src/Makefile.am	2008-07-06 16:47:15.000000000 +0900
+@@ -241,6 +241,11 @@ mod_accesslog_la_SOURCES = mod_accesslog
  mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
  mod_accesslog_la_LIBADD = $(common_libadd)
  
@@ -33,12 +33,13 @@ diff -urNp lighttpd-1.4.18.org/src/Makefile.am lighttpd-1.4.18/src/Makefile.am
 +mod_url_la_SOURCES = mod_url.c
 +mod_url_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
 +mod_url_la_LIBADD = $(common_libadd)
++
  
  hdr = server.h buffer.h network.h log.h keyvalue.h \
        response.h request.h fastcgi.h chunk.h \
-diff -urNp lighttpd-1.4.18.org/src/Makefile.in lighttpd-1.4.18/src/Makefile.in
---- lighttpd-1.4.18.org/src/Makefile.in	2007-09-10 04:55:29.000000000 +0900
-+++ lighttpd-1.4.18/src/Makefile.in	2007-12-07 15:24:26.000000000 +0900
+diff -urNp lighttpd-1.4.19.org/src/Makefile.in lighttpd-1.4.19/src/Makefile.in
+--- lighttpd-1.4.19.org/src/Makefile.in	2008-03-11 06:46:10.000000000 +0900
++++ lighttpd-1.4.19/src/Makefile.in	2008-07-06 16:50:05.000000000 +0900
 @@ -321,6 +321,12 @@ mod_webdav_la_OBJECTS = $(am_mod_webdav_
  mod_webdav_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
  	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mod_webdav_la_CFLAGS) \
