@@ -277,7 +277,8 @@ static int check_redurl(request_rec *r)
 		char *buf, *to;
 		const char *s_enc, *c_enc;
 		apr_pool_t *p = r->pool;
-		size_t len, flen, tlen, ret;
+		size_t len, flen, tlen;
+		short ret;
 
 		s_enc = cfg->server_encoding ? cfg->server_encoding : DEFAULT_SERVER_ENCODING;
 		c_enc = cfg->client_encoding ? cfg->client_encoding : DEFAULT_CLIENT_ENCODING;
