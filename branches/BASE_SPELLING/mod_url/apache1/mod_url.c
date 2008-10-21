@@ -72,7 +72,7 @@
  *    JoungKyun.Kim <http://oops.org>
  *  URL:
  *    http://modurl.kldp.net
- * $Id: mod_url.c,v 1.8.2.3 2008-03-15 08:58:14 oops Exp $
+ * $Id: mod_url.c,v 1.8.2.4 2008-10-21 09:49:50 oops Exp $
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
  */
@@ -312,7 +312,8 @@ static int check_redurl(request_rec *r)
 		char *buf, *to;
 		const char *s_enc, *c_enc;
 		pool *p = r->pool;
-		size_t len, flen, tlen, ret;
+		size_t len, flen, tlen;
+		short ret;
 
 		s_enc = cfg->server_encoding ? cfg->server_encoding : DEFAULT_SERVER_ENCODING;
 		c_enc = cfg->client_encoding ? cfg->client_encoding : DEFAULT_CLIENT_ENCODING;

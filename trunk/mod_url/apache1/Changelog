@@ -1,7 +1,10 @@
 mod_url Apache module Changelog
-# $Id: Changelog,v 1.6 2007-11-20 17:24:56 oops Exp $
+# $Id: Changelog,v 1.7 2008-10-21 09:55:46 oops Exp $
 
 http://modurl.kldp.net
+
+* 2008/10/21 JoungKyun.Kim <http://oops.org>
+- bug #305141: wrong declear return variable of iconv return
 
 * 2007/11/21 JoungKyun.Kim <http://oops.org>
 - bug #304642: under over glibc 2.3, miss checking iconv result status

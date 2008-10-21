@@ -1,7 +1,10 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.6 2007-12-24 08:28:29 oops Exp $
+# $Id: Changelog,v 1.7 2008-10-21 09:54:21 oops Exp $
 
 http://modurl.kldp.net
+
+* 2008/10/21 JoungKyun.Kim <http://oops.org>
+- bug #305141: wrong declear return variable of iconv return
 
 * 2007/12/24 JoungKyun.Kim <http://oops.org>
 - patch #304683: support Windows NT system

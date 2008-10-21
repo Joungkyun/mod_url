@@ -63,7 +63,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.13 2007-12-24 08:28:29 oops Exp $
+ * $Id: mod_url.c,v 1.14 2008-10-21 09:54:21 oops Exp $
  */
 
 /*
@@ -98,7 +98,7 @@ typedef struct {
 	size_t  len;
 	size_t  flen;
 	size_t  tlen;
-	size_t  ret;
+	short   ret;
 	short   alloc;
 } iconv_s;
 

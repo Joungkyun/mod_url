@@ -5,7 +5,7 @@
  * URL     :
  *          http://oops.org
  *          http://modurl.kldp.net
- * $Id: mod_url.c,v 1.3 2008-03-15 08:59:11 oops Exp $
+ * $Id: mod_url.c,v 1.4 2008-10-21 09:51:23 oops Exp $
  *
  * License of this module follows GPL v2.
  */
@@ -65,7 +65,7 @@ typedef struct {
 	size_t  len;
 	size_t  flen;
 	size_t  tlen;
-	size_t  ret;
+	short   ret;
 	short   alloc;
 } iconv_s;
 
