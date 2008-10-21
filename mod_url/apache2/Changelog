@@ -1,10 +1,11 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.7 2008-10-21 09:54:21 oops Exp $
+# $Id: Changelog,v 1.8 2008-10-21 11:18:54 oops Exp $
 
 http://modurl.kldp.net
 
 * 2008/10/21 JoungKyun.Kim <http://oops.org>
-- bug #305141: wrong declear return variable of iconv return
+- bug #350907: wrong declear return variable of iconv return
+- bug #305132: fixed memory leak
 
 * 2007/12/24 JoungKyun.Kim <http://oops.org>
 - patch #304683: support Windows NT system

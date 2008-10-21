@@ -5,7 +5,7 @@
  * URL     :
  *          http://oops.org
  *          http://modurl.kldp.net
- * $Id: mod_url.c,v 1.4 2008-10-21 09:51:23 oops Exp $
+ * $Id: mod_url.c,v 1.5 2008-10-21 11:18:34 oops Exp $
  *
  * License of this module follows GPL v2.
  */
@@ -67,6 +67,7 @@ typedef struct {
 	size_t  tlen;
 	short   ret;
 	short   alloc;
+	short   clloc;
 } iconv_s;
 
 void url_mem_error (server *, char *);
@@ -273,8 +274,11 @@ void url_iconv_free (iconv_s * ic, int type) {
 	if ( ic->alloc )
 		free (ic->uri);
 
+	if ( ic->clloc )
+		iconv_close (ic->cd);
+
 	/* init structure members */
-	ic->alloc = ic->len = ic->tlen = ic->flen = ic->ret = 0;
+	ic->alloc = ic->clloc = ic->len = ic->tlen = ic->flen = ic->ret = 0;
 
 	if ( ! type )
 		free (ic);
@@ -310,6 +314,7 @@ short url_iconv (server * srv, plugin_config p, iconv_s * ic, char * path) {
 	}
 
 	ic->alloc = 0;
+	ic->clloc = 0;
 
 	ic->cd = iconv_open (p.server_encoding->ptr, p.client_encoding->ptr);
 
@@ -338,6 +343,7 @@ short url_iconv (server * srv, plugin_config p, iconv_s * ic, char * path) {
 
 		return URL_ICONV_FALSE;
 	}
+	ic->clloc++;
 
 	flen = ic->len = strlen (src);
 	tlen = flen * 4 + 1; /* MB_CUR_MAX ~ 4 */

@@ -76,7 +76,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.15 2008-10-21 09:55:46 oops Exp $
+ * $Id: mod_url.c,v 1.16 2008-10-21 11:19:10 oops Exp $
  */
 
 /*
@@ -292,6 +292,8 @@ void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * 
 		redurl_mem_error (r, APLOG_MARK, "ic->uri");
 		ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
 				"check_redurl_iconv: iconv convert end   -------------------");
+
+		iconv_close (cfg->cd);
 		return;
 	} else
 		memset (ic->uri, 0, sizeof (char) * tlen);
@@ -304,6 +306,8 @@ void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * 
 	tlen = strlen (ic->uri);
 	ic->tlen = tlen;
 	ic->flen = flen;
+
+	iconv_close (cfg->cd);
 
 	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_DEBUG, r,
 			"  Oirg       => %s (%d)", s_uri, ic->len);
