@@ -302,6 +302,8 @@ static int check_redurl(request_rec *r)
 		to= buf;
 
 		ret=iconv(cfg->cd, &src, &flen, &to, &tlen);
+		if ( ret > -1 )
+			iconv_close (cfg->cd);
 
 		tlen=strlen(buf);
 		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
