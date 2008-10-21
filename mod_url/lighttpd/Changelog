@@ -1,8 +1,11 @@
 mod_url Lighttpd module changelog
-# $Id: Changelog,v 1.3 2008-03-15 08:59:11 oops Exp $
+# $Id: Changelog,v 1.4 2008-10-21 09:51:23 oops Exp $
 
 http://modurl.kldp.net
 http://oops.org
+
+* 2008/10/21 JoungKyun.Kim <http://oops.org>
+- bug #305141: wrong declear return variable of iconv return
 
 * 2008/03/15 JoungKyun.Kim <http://oops.org>
 - bug #304642: under over glibc 2.3, miss checking iconv result status
