@@ -1,10 +1,11 @@
 mod_url Apache module Changelog
-# $Id: Changelog,v 1.7 2008-10-21 09:55:46 oops Exp $
+# $Id: Changelog,v 1.8 2008-10-21 11:19:10 oops Exp $
 
 http://modurl.kldp.net
 
 * 2008/10/21 JoungKyun.Kim <http://oops.org>
-- bug #305141: wrong declear return variable of iconv return
+- bug #350907: wrong declear return variable of iconv return
+- bug #305132: fixed memory leak
 
 * 2007/11/21 JoungKyun.Kim <http://oops.org>
 - bug #304642: under over glibc 2.3, miss checking iconv result status
