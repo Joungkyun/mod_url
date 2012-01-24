@@ -273,6 +273,9 @@ static int check_redurl(request_rec *r)
 		 "Orig URL: %s %s url:%s",
 		 r->uri, good, url);
 	{
+#ifdef _LIBICONV_H
+		const
+#endif
 		char *src = r->uri;
 		char *buf, *to;
 		const char *s_enc, *c_enc;
