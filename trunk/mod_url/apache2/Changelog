@@ -1,7 +1,10 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.8 2008-10-21 11:18:54 oops Exp $
+# $Id: Changelog,v 1.9 2012-01-24 17:19:11 oops Exp $
 
 http://modurl.kldp.net
+
+* 2012/01/25 JoungKyun.Kim <http://oops.org>
+- bug #315267: fixed compile warnging with libiconv
 
 * 2008/10/21 JoungKyun.Kim <http://oops.org>
 - bug #350907: wrong declear return variable of iconv return

@@ -5,7 +5,7 @@
  * URL     :
  *          http://oops.org
  *          http://modurl.kldp.net
- * $Id: mod_url.c,v 1.5 2008-10-21 11:18:34 oops Exp $
+ * $Id: mod_url.c,v 1.6 2012-01-24 17:21:13 oops Exp $
  *
  * License of this module follows GPL v2.
  */
@@ -298,6 +298,9 @@ static short url_iconv_result (iconv_s * ic) {
 }
 
 short url_iconv (server * srv, plugin_config p, iconv_s * ic, char * path) {
+#ifdef _LIBICONV_H
+	const
+#endif
 	char * src = path;
 #if __GLIBC_MINOR__ < 2
 	const

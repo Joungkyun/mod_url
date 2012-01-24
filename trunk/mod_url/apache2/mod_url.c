@@ -63,7 +63,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.15 2008-10-21 11:18:54 oops Exp $
+ * $Id: mod_url.c,v 1.16 2012-01-24 17:19:11 oops Exp $
  */
 
 /*
@@ -243,6 +243,9 @@ void redurl_mem_error (const request_rec * s, const char * file, int line, char 
 
 void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * s_uri)
 {
+#ifdef _LIBICONV_H
+	const
+#endif
 	char * src = s_uri;
 	char * to;
 	const char * s_enc, * c_enc;
