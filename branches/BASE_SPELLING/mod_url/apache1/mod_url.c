@@ -72,7 +72,7 @@
  *    JoungKyun.Kim <http://oops.org>
  *  URL:
  *    http://modurl.kldp.net
- * $Id: mod_url.c,v 1.8.2.6 2008-10-21 11:24:27 oops Exp $
+ * $Id: mod_url.c,v 1.8.2.7 2012-01-24 17:31:19 oops Exp $
  * 
  * based mod_speling.c Alexei Kosut <akosut@organic.com> June, 1996
  */
@@ -308,6 +308,9 @@ static int check_redurl(request_rec *r)
 		 r->uri, good, url);
 
 	{
+#ifdef _LIBICONV_H
+		const
+#endif
 		char *src = r->uri;
 		char *buf, *to;
 		const char *s_enc, *c_enc;
