@@ -1,8 +1,11 @@
 mod_url Lighttpd module changelog
-# $Id: Changelog,v 1.6 2008-10-21 11:46:01 oops Exp $
+# $Id: Changelog,v 1.7 2012-01-24 17:21:13 oops Exp $
 
 http://modurl.kldp.net
 http://oops.org
+
+* 2012/01/25 JoungKyun.Kim <http://oops.org>
+- bug #315267: fixed compile warnging with libiconv
 
 * 2008/10/21 JoungKyun.Kim <http://oops.org>
 - bug #305141: wrong declear return variable of iconv return
