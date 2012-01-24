@@ -1,5 +1,7 @@
 @echo off
 rem ################################################
+rem  $Id: win32_compile.bat,v 1.2 2012-01-24 17:34:28 oops Exp $
+rem
 rem  1. Requirements to compile on Win32 environment
 rem  
 rem     A. Apache libraries

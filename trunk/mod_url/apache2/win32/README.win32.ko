@@ -1,6 +1,6 @@
 mod_url Windows NT system README document for Apache 2
 
-# Id: $
+$Id: README.win32.ko,v 1.2 2012-01-24 17:34:28 oops Exp $
 
 이 문서는 윈도우즈 NT 시스템에서의 mod_url 작동에 대한 사항을 설명한다.
 
