@@ -55,6 +55,14 @@
 #define REDURL_ICONV_TRUE 0
 #define REDURL_ICONV_FALSE 1
 
+#if MODULE_MAGIC_NUMBER_MAJOR <= 20051115 // until httpd 2.2
+#	define REDURL_LOG_MARK APLOG_MARK
+#	define MODURL_LOG_MARK file,line
+#else                                     // from httpd 2.4
+#	define REDURL_LOG_MARK __FILE__,__LINE__
+#	define MODURL_LOG_MARK file,line,APLOG_MODULE_INDEX
+#endif
+
 /*
  * mod_url.c: fix mismatched URL encoding between server and clients
  * Writer:
@@ -63,7 +71,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.16 2012-01-24 17:19:11 oops Exp $
+ * $Id: mod_url.c,v 1.17 2012-12-20 15:53:07 oops Exp $
  */
 
 /*
@@ -235,10 +243,10 @@ char * check_redurl_encode (const char * str, int len, int * retlen)
 	return (char *) r;
 }
 
-void redurl_mem_error (const request_rec * s, const char * file, int line, char * r)
+void redurl_mem_error (const request_rec * r, const char * file, int line, char * msg)
 {
-	ap_log_rerror (file, line, APLOG_ERR, APR_ENOPOOL, s,
-			"%s variable: memory allocation failed", r);
+	ap_log_rerror (MODURL_LOG_MARK, APLOG_ERR, APR_ENOPOOL, r,
+			"%s variable: memory allocation failed", msg);
 }
 
 void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * s_uri)
@@ -288,7 +296,7 @@ void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * 
 
 	if ( (ic->uri = (char *) malloc (sizeof (char) * tlen)) == NULL ) {
 		ic->ret = -1;
-		redurl_mem_error (r, APLOG_MARK, "ic->uri");
+		redurl_mem_error (r, REDURL_LOG_MARK, "ic->uri");
 		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 				"check_redurl_iconv: iconv convert end   -------------------");
 		iconv_close (cfg->cd);
@@ -380,7 +388,7 @@ static int check_redurl (request_rec * r)
 	plen = r->path_info ? strlen (r->path_info) : 0;
 
 	if ( (realpath = (char *) malloc (sizeof (char) * (flen + plen + 1))) == NULL ) {
-		redurl_mem_error (r, APLOG_MARK, "realpath");
+		redurl_mem_error (r, REDURL_LOG_MARK, "realpath");
 		return DECLINED;
 	}
 
@@ -407,7 +415,7 @@ static int check_redurl (request_rec * r)
 			"URI Converting");
 
 	if ( (uic = (iconv_s *) malloc (sizeof (iconv_s) + 1)) == NULL ) {
-		redurl_mem_error (r, APLOG_MARK, "uic");
+		redurl_mem_error (r, REDURL_LOG_MARK, "uic");
 		free (realpath);
 
 		return DECLINED;
@@ -444,7 +452,7 @@ static int check_redurl (request_rec * r)
 	}
 
 	if ( (enc = check_redurl_encode (uic->uri, strlen (uic->uri), NULL)) == NULL ) {
-		redurl_mem_error (r, APLOG_MARK, "enc");
+		redurl_mem_error (r, REDURL_LOG_MARK, "enc");
 		check_redurl_iconv_free (uic);
 		free (realpath);
 
@@ -463,7 +471,7 @@ static int check_redurl (request_rec * r)
 			"Real path Converting"); 
 
 	if ( (ric = (iconv_s *) malloc (sizeof (iconv_s) + 1)) == NULL ) {
-		redurl_mem_error (r, APLOG_MARK, "ric");
+		redurl_mem_error (r, REDURL_LOG_MARK, "ric");
 		free (realpath);
 
 		return DECLINED;
@@ -718,7 +726,7 @@ static int pre_redurl (request_rec * r) {
 	real_len = rootlen + urilen;
 
 	if ( (realpath = (char *) malloc (sizeof (char) * (real_len + 1))) == NULL ) {
-		redurl_mem_error (r, APLOG_MARK, "pre realpath");
+		redurl_mem_error (r, REDURL_LOG_MARK, "pre realpath");
 		return DECLINED;
 	}
 
@@ -747,7 +755,7 @@ static int pre_redurl (request_rec * r) {
 			"Pre Real path Converting"); 
 
 	if ( (ric = (iconv_s *) malloc (sizeof (iconv_s) + 1)) == NULL ) {
-		redurl_mem_error (r, APLOG_MARK, "pre real: ric");
+		redurl_mem_error (r, REDURL_LOG_MARK, "pre real: ric");
 		free (realpath);
 
 		return DECLINED;
@@ -785,7 +793,7 @@ static int pre_redurl (request_rec * r) {
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r, "Pre URI Converting");
 
 	if ( (ric = (iconv_s *) malloc (sizeof (iconv_s) + 1)) == NULL ) {
-		redurl_mem_error (r, APLOG_MARK, "pre uri: ric");
+		redurl_mem_error (r, REDURL_LOG_MARK, "pre uri: ric");
 		free (realpath);
 		return DECLINED;
 	}
@@ -800,7 +808,7 @@ static int pre_redurl (request_rec * r) {
 	}
 
 	if ( (enc = check_redurl_encode (ric->uri, strlen (ric->uri), NULL)) == NULL ) {
-		redurl_mem_error (r, APLOG_MARK, "enc");
+		redurl_mem_error (r, REDURL_LOG_MARK, "enc");
 		check_redurl_iconv_free (ric);
 		free (realpath);
 

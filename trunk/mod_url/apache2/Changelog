@@ -1,7 +1,10 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.10 2012-01-24 18:32:20 oops Exp $
+# $Id: Changelog,v 1.11 2012-12-20 15:53:07 oops Exp $
 
 http://modurl.kldp.net
+
+* 2012/12/21 JoungKyun.Kim <http://oops.org>
+- bug [#318479]: fixed APLOG_MARK changes on httpd 2.4
 
 * 2012/01/25 JoungKyun.Kim <http://oops.org>
 - bug [#315267]: fixed compile warnging with libiconv
