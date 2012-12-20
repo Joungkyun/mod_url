@@ -71,7 +71,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.17 2012-12-20 15:53:07 oops Exp $
+ * $Id: mod_url.c,v 1.18 2012-12-20 16:01:45 oops Exp $
  */
 
 /*
@@ -614,7 +614,6 @@ static int pre_redurl (request_rec * r) {
 
 		const userdir_config *ucfg;
 		const char *userdirs;
-		struct passwd *pw;
 		const char *w, *dname;
 
 		is_userdir = 1;
