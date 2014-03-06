@@ -5,7 +5,7 @@
  * URL     :
  *          http://oops.org
  *          http://modurl.kldp.net
- * $Id: mod_url.c,v 1.7 2014-03-06 07:01:55 oops Exp $
+ * $Id: mod_url.c,v 1.8 2014-03-06 08:24:30 oops Exp $
  *
  * License of this module follows GPL v2.
  */
@@ -44,6 +44,9 @@
 
 #define __URL_DEBUG 0
 
+#define url_log(type, ...) \
+	log_error_write (srv, __FILE__, __LINE__, type, __VA_ARGS__) 
+
 typedef struct {
 	short enabled;
 	short debug;
@@ -75,7 +78,7 @@ void url_iconv_free (iconv_s *, int);
 static short url_iconv_result (iconv_s *);
 short url_iconv (server *, plugin_config, iconv_s *, char *);
 void check_url (server *, connection *, plugin_data *);
-void url_log_error_hex_write (server *, char *, char *);
+void url_log_to_hex (server *, char *, char *);
 short url_file_exists (char *);
 
 INIT_FUNC(mod_url_init) {
@@ -91,12 +94,11 @@ FREE_FUNC(mod_url_free) {
 	UNUSED (srv);
 
 #if __URL_DEBUG
-	log_error_write (srv, __FILE__, __LINE__, "s", "** mod_url_free");
+	url_log ("s", "** mod_url_free");
 #endif
 
 	if ( ! p ) {
-		log_error_write (srv, __FILE__, __LINE__, "s",
-						"FREE_FUNC: plugin_data has no data");
+		url_log ("s", "FREE_FUNC: plugin_data has no data");
 		return HANDLER_GO_ON;
 	}
 
@@ -134,11 +136,11 @@ SETDEFAULTS_FUNC(mod_url_set_default) {
 	};
 
 #if __URL_DEBUG
-	log_error_write (srv, __FILE__, __LINE__, "s", "** mod_url_set_defaults");
+	url_log ("ss", "-- handling it in", __func__);
 #endif
 
 	if ( !p ) {
-		log_error_write (srv, __FILE__, __LINE__, "s", "can't initionalize plugin_data");
+		url_log ("s", "can't initionalize plugin_data");
 		return HANDLER_ERROR;
 	}
 
@@ -161,7 +163,7 @@ SETDEFAULTS_FUNC(mod_url_set_default) {
 		p->config_storage[i] = s;
 
 		if ( 0 != config_insert_values_global (srv, ((data_config *) srv->config_context->data[i])->value, cv) ) {
-			log_error_write (srv, __FILE__, __LINE__, "s", "Can't insert global config value");
+			url_log ("s", "Can't insert global config value");
 			return HANDLER_ERROR;
 		}
 	}
@@ -176,9 +178,8 @@ static int mod_url_patch_connection (server *srv, connection *con, plugin_data *
 	plugin_config *s = p->config_storage[0];
 	size_t i, j;
 
-#if __URL_DEBUG
-	log_error_write (srv, __FILE__, __LINE__, "s", "** mod_url_patch_connection");
-#endif
+	if ( con->conf.log_request_handling )
+		url_log ("ss", "-- handling it in", __func__);
 
 	PATCH (enabled);
 	PATCH (debug);
@@ -209,6 +210,9 @@ static int mod_url_patch_connection (server *srv, connection *con, plugin_data *
 		}
 	}
 
+	if ( con->conf.log_request_handling )
+		p->conf.debug = 1;
+
 	if ( buffer_is_empty (p->conf.server_encoding) )
 		buffer_copy_string (p->conf.server_encoding, DEFAULT_SERVER_CHARSET);
 
@@ -216,9 +220,9 @@ static int mod_url_patch_connection (server *srv, connection *con, plugin_data *
 		buffer_copy_string (p->conf.client_encoding, DEFAULT_CLIENT_CHARSET);
 
 	if ( p->conf.debug ) {
-		log_error_write (srv, __FILE__, __LINE__, "sd", "Set url.enabled:", p->conf.enabled);
-		log_error_write (srv, __FILE__, __LINE__, "ss", "Set url.server_encoding:", p->conf.server_encoding->ptr);
-		log_error_write (srv, __FILE__, __LINE__, "ss", "Set url.client_encoding:", p->conf.client_encoding->ptr);
+		url_log ("sd", "Set url.enabled:", p->conf.enabled);
+		url_log ("ss", "Set url.server_encoding:", p->conf.server_encoding->ptr);
+		url_log ("ss", "Set url.client_encoding:", p->conf.client_encoding->ptr);
 	}
 
 	return 0;
@@ -230,9 +234,8 @@ static int mod_url_patch_connection (server *srv, connection *con, plugin_data *
 PHYSICALPATH_FUNC (mod_url_handler) {
 	plugin_data *p = p_d;
 
-#if __URL_DEBUG
-	log_error_write (srv, __FILE__, __LINE__, "s", "** mod_url_handler");
-#endif
+	if ( con->conf.log_request_handling )
+		url_log ("ss", "-- handling it in ", __func__);
 
 	UNUSED (srv);
 
@@ -266,8 +269,7 @@ int mod_url_plugin_init (plugin *p) {
 /* User Define API */
 
 void url_mem_error (server * srv, char * r) {
-	log_error_write (srv, __FILE__, __LINE__, "ss",
-			r, "variable: memory allocation failed");
+	url_log ("ss", r, "variable: memory allocation failed");
 }
 
 void url_iconv_free (iconv_s * ic, int type) {
@@ -311,43 +313,31 @@ short url_iconv (server * srv, plugin_config p, iconv_s * ic, char * path) {
 
 	ic->len = ic->tlen = ic->flen = ic->ret = 0;
 
-	if ( p.debug ) {
-		log_error_write (srv, __FILE__, __LINE__, "s",
-				"check_url_iconv: iconv convert start ----------------------");
-	}
+	if ( p.debug )
+		url_log("sss", "  >>", __func__, ": iconv convert start");
 
 	ic->alloc = 0;
 	ic->clloc = 0;
 
-	if ( p.debug ) {
-		log_error_write (srv, __FILE__, __LINE__, "ss", "iconv from:", p.client_encoding->ptr);
-		log_error_write (srv, __FILE__, __LINE__, "ss", "iconv to:  ", p.server_encoding->ptr);
-	}
-
 	ic->cd = iconv_open (p.server_encoding->ptr, p.client_encoding->ptr);
 
 	if ( p.debug ) {
-		log_error_write (srv, __FILE__, __LINE__, "ssss",
-				"mod_url configuration: Server Encoding",
-			   	p.server_encoding->ptr,
-				"Client Encoding",
-				p.client_encoding->ptr
-		);
+		url_log ("s", "     mod_url configuration:");
+		url_log ("ss", "       Server Encoding", p.server_encoding->ptr);
+		url_log ("ss", "       Client Encoding", p.client_encoding->ptr);
 	}
 
 	if ( ic->cd == (iconv_t) (-1) ) {
 		ic->ret = -1;
-		log_error_write (srv, __FILE__, __LINE__, "ssss",
-				"Incomplete configuration: Server Encoding",
+		url_log ("ssss",
+				"    Incomplete configuration: Server Encoding",
 				p.server_encoding->ptr,
-				"Client Encoding",
+				" / Client Encoding",
 				p.client_encoding->ptr
 		);
 
-		if ( p.debug ) {
-			log_error_write (srv, __FILE__, __LINE__, "s",
-					"check_url_iconv: iconv convert end   ----------------------");
-		}
+		if ( p.debug )
+			url_log ("s", "  >> ", __func__, ": iconv convert end");
 
 		return URL_ICONV_FALSE;
 	}
@@ -360,10 +350,8 @@ short url_iconv (server * srv, plugin_config p, iconv_s * ic, char * path) {
 		ic->ret = -1;
 		url_mem_error (srv, "ic->uri");	
 
-		if ( p.debug ) {
-			log_error_write (srv, __FILE__, __LINE__, "s",
-					"check_url_iconv: iconv convert end   ----------------------");
-		}
+		if ( p.debug )
+			url_log ("sss", "  <<", __func__, ": iconv convert end");
 
 		return URL_ICONV_FALSE;
 	}
@@ -382,13 +370,12 @@ short url_iconv (server * srv, plugin_config p, iconv_s * ic, char * path) {
 	 * Converted URI information loggin
 	 */
 	if ( p.debug ) {
-		url_log_error_hex_write (srv, "  S_URI => ", path);
-		url_log_error_hex_write (srv, "  URI   => ", ic->uri);
-		log_error_write (srv, __FILE__, __LINE__, "sd", "  SLEN  =>", ic->len);
-		log_error_write (srv, __FILE__, __LINE__, "sd", "  LEN   =>", ic->tlen);
-		log_error_write (srv, __FILE__, __LINE__, "sd", "  CODE  =>", ic->ret);
-		log_error_write (srv, __FILE__, __LINE__, "s",
-				"check_url_iconv: iconv convert end   ----------------------");
+		url_log_to_hex (srv, "       S_URI => ", path);
+		url_log_to_hex (srv, "       URI   => ", ic->uri);
+		url_log ("sd", "       SLEN  =>", ic->len);
+		url_log ("sd", "       LEN   =>", ic->tlen);
+		url_log ("sd", "       CODE  =>", ic->ret);
+		url_log ("sss", "  <<", __func__, ": iconv convert end");
 	}
 
 	ic_r = url_iconv_result (ic);
@@ -409,9 +396,9 @@ void check_url (server * srv, connection * c, plugin_data * p) {
 	char * new_uri;
 
 	if ( s.debug ) {
-		url_log_error_hex_write (srv, "URI   : ", c->uri.path->ptr);
-		url_log_error_hex_write (srv, "PATH  : ", c->physical.path->ptr);
-		url_log_error_hex_write (srv, "RPATH : ", c->physical.rel_path->ptr);
+		url_log_to_hex (srv, "URI   : ", c->uri.path->ptr);
+		url_log_to_hex (srv, "PATH  : ", c->physical.path->ptr);
+		url_log_to_hex (srv, "RPATH : ", c->physical.rel_path->ptr);
 	}
 
 	/* if physical path is exists, skip */
@@ -423,7 +410,7 @@ void check_url (server * srv, connection * c, plugin_data * p) {
 	 */
 
 	if ( s.debug )
-		log_error_write (srv, __FILE__, __LINE__, "s", "++ URI Convert");
+		url_log ("s", "++ URI Convert");
 
 	if ( (ic = (iconv_s *) malloc (sizeof (iconv_s) + 1)) == NULL ) {
 		url_mem_error (srv, "iconv_s structure");	
@@ -450,7 +437,7 @@ void check_url (server * srv, connection * c, plugin_data * p) {
 	 */
 
 	if ( s.debug )
-		log_error_write (srv, __FILE__, __LINE__, "s", "++ Physical path Convert");
+		url_log ("s", "++ Physical path Convert");
 
 	/* Failed iconv */
 	if ( url_iconv (srv, s, ic, c->physical.path->ptr) == URL_ICONV_FALSE ) {
@@ -464,7 +451,7 @@ void check_url (server * srv, connection * c, plugin_data * p) {
 	 */
 	if ( url_file_exists (ic->uri) == URL_FALSE ) {
 		/* flie not found */
-		log_error_write (srv, __FILE__, __LINE__, "ss", "  Not Found =>", ic->uri);
+		url_log ("ss", "  Not Found =>", ic->uri);
 		url_iconv_free (ic, 0);
 		free (new_uri);
 		return;
@@ -483,20 +470,20 @@ void check_url (server * srv, connection * c, plugin_data * p) {
 	url_iconv_free (ic, 0);
 
 	if ( s.debug ) {
-		url_log_error_hex_write (srv, "URI   : ", c->uri.path->ptr);
-		url_log_error_hex_write (srv, "PATH  : ", c->physical.path->ptr);
-		url_log_error_hex_write (srv, "RPATH : ", c->physical.rel_path->ptr);
+		url_log_to_hex (srv, "URI   : ", c->uri.path->ptr);
+		url_log_to_hex (srv, "PATH  : ", c->physical.path->ptr);
+		url_log_to_hex (srv, "RPATH : ", c->physical.rel_path->ptr);
 	}
 }
 
-void url_log_error_hex_write (server * srv, char * src, char * value) {
+void url_log_to_hex (server * srv, char * src, char * value) {
 	buffer * r;
 
 	r = buffer_init ();
 	buffer_copy_string (r, src);
 	buffer_append_string_encoded (r, value, strlen (value), ENCODING_REL_URI);
 
-	log_error_write (srv, __FILE__, __LINE__, "s", r->ptr);
+	url_log ("s", r->ptr);
 
 	buffer_free (r);
 }
