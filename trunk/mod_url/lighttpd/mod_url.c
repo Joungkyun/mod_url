@@ -5,7 +5,7 @@
  * URL     :
  *          http://oops.org
  *          http://modurl.kldp.net
- * $Id: mod_url.c,v 1.6 2012-01-24 17:21:13 oops Exp $
+ * $Id: mod_url.c,v 1.7 2014-03-06 07:01:55 oops Exp $
  *
  * License of this module follows GPL v2.
  */
@@ -209,16 +209,16 @@ static int mod_url_patch_connection (server *srv, connection *con, plugin_data *
 		}
 	}
 
-	if ( buffer_is_empty (s->server_encoding) )
-		buffer_copy_string (s->server_encoding, DEFAULT_SERVER_CHARSET);
+	if ( buffer_is_empty (p->conf.server_encoding) )
+		buffer_copy_string (p->conf.server_encoding, DEFAULT_SERVER_CHARSET);
 
-	if ( buffer_is_empty (s->client_encoding) )
-		buffer_copy_string (s->client_encoding, DEFAULT_CLIENT_CHARSET);
+	if ( buffer_is_empty (p->conf.client_encoding) )
+		buffer_copy_string (p->conf.client_encoding, DEFAULT_CLIENT_CHARSET);
 
 	if ( p->conf.debug ) {
-		log_error_write (srv, __FILE__, __LINE__, "sd", "url.enabled:", p->conf.enabled);
-		log_error_write (srv, __FILE__, __LINE__, "ss", "url.server_encoding:", p->conf.server_encoding->ptr);
-		log_error_write (srv, __FILE__, __LINE__, "ss", "url.client_encoding:", p->conf.client_encoding->ptr);
+		log_error_write (srv, __FILE__, __LINE__, "sd", "Set url.enabled:", p->conf.enabled);
+		log_error_write (srv, __FILE__, __LINE__, "ss", "Set url.server_encoding:", p->conf.server_encoding->ptr);
+		log_error_write (srv, __FILE__, __LINE__, "ss", "Set url.client_encoding:", p->conf.client_encoding->ptr);
 	}
 
 	return 0;
@@ -318,6 +318,11 @@ short url_iconv (server * srv, plugin_config p, iconv_s * ic, char * path) {
 
 	ic->alloc = 0;
 	ic->clloc = 0;
+
+	if ( p.debug ) {
+		log_error_write (srv, __FILE__, __LINE__, "ss", "iconv from:", p.client_encoding->ptr);
+		log_error_write (srv, __FILE__, __LINE__, "ss", "iconv to:  ", p.server_encoding->ptr);
+	}
 
 	ic->cd = iconv_open (p.server_encoding->ptr, p.client_encoding->ptr);
 
