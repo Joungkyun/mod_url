@@ -1,5 +1,5 @@
 mod_url README document for Lighttpd
-# $Id: README,v 1.3 2008-11-04 10:47:54 oops Exp $
+# $Id: README,v 1.4 2014-03-06 09:38:34 oops Exp $
 
 mod_url is lighttpd module that fix mismatched URL encoding between server and client.
 This module is operated on lighttpd 1.4.x.
@@ -9,10 +9,26 @@ This product includes software developed by the KLDP.net (http://modurl.kldp.net
 
 1. Compile
 
-   First, patch the lighttpd-mod-url.patch and mod_url.c is located
-   in lighttpd-src/src directory.
+   First, edit configura.ac
+
+      1. open the configure.ac
+      2. search do_build variable
+      3. add mod_url in do_build variable
+
+   Second, edit src/Makefile.am and input follow lines
+
+      lib_LTLIBRARIES += mod_url .la
+      mod_accesslog_la_SOURCES = mod_url .c
+      mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
+      mod_accesslog_la_LIBADD = $(common_libadd)
+
+   If you build with libiconv, set mod_accesslog_la_LIBADD to follows:
+
+      mod_accesslog_la_LIBADD = -liconv $(common_libadd)
+      
 
    And, build lighttpd
+   shell> autoreconf -fi
    shell> ./configure
    shell> make
    shell> make install
