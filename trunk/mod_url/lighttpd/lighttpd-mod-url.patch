@@ -1,47 +1,46 @@
-diff -urNp lighttpd-1.4.20.org/configure lighttpd-1.4.20/configure
---- lighttpd-1.4.20.org/configure	2008-09-30 08:14:30.000000000 +0900
-+++ lighttpd-1.4.20/configure	2008-10-21 20:41:11.000000000 +0900
-@@ -30225,7 +30225,7 @@ fi
+diff -urNp lighttpd-1.4.34.org/configure lighttpd-1.4.34/configure
+--- lighttpd-1.4.34.org/configure	2014-01-20 21:09:10.000000000 +0900
++++ lighttpd-1.4.34/configure	2014-03-06 18:32:03.374950727 +0900
+@@ -18833,7 +18833,7 @@ fi
  
  
- 
--do_build="mod_cgi mod_fastcgi mod_extforward mod_proxy mod_evhost mod_simple_vhost mod_access mod_alias mod_setenv mod_usertrack mod_auth mod_status mod_accesslog mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfiles mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming"
-+do_build="mod_cgi mod_fastcgi mod_extforward mod_proxy mod_evhost mod_simple_vhost mod_access mod_alias mod_setenv mod_usertrack mod_auth mod_status mod_accesslog mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfiles mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming mod_url"
- 
- plugins="mod_rewrite mod_redirect mod_ssi mod_trigger_b4_dl"
- features="regex-conditionals"
-diff -urNp lighttpd-1.4.20.org/configure.in lighttpd-1.4.20/configure.in
---- lighttpd-1.4.20.org/configure.in	2008-06-18 01:32:05.000000000 +0900
-+++ lighttpd-1.4.20/configure.in	2008-10-21 20:41:11.000000000 +0900
-@@ -559,7 +559,7 @@ AC_CONFIG_FILES([Makefile src/Makefile d
- AC_OUTPUT
- 
- 
--do_build="mod_cgi mod_fastcgi mod_extforward mod_proxy mod_evhost mod_simple_vhost mod_access mod_alias mod_setenv mod_usertrack mod_auth mod_status mod_accesslog mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfiles mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming"
-+do_build="mod_cgi mod_fastcgi mod_extforward mod_proxy mod_evhost mod_simple_vhost mod_access mod_alias mod_setenv mod_usertrack mod_auth mod_status mod_accesslog mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfiles mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming mod_url"
+ do_build="mod_cgi mod_fastcgi mod_extforward mod_proxy mod_evhost mod_simple_vhost mod_access mod_alias mod_setenv mod_usertrack mod_auth mod_status mod_accesslog"
+-do_build="$do_build mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfile mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming"
++do_build="$do_build mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfile mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming mod_url"
  
  plugins="mod_rewrite mod_redirect mod_ssi mod_trigger_b4_dl"
  features="regex-conditionals"
-diff -urNp lighttpd-1.4.20.org/src/Makefile.am lighttpd-1.4.20/src/Makefile.am
---- lighttpd-1.4.20.org/src/Makefile.am	2008-08-27 23:53:06.000000000 +0900
-+++ lighttpd-1.4.20/src/Makefile.am	2008-10-21 20:41:11.000000000 +0900
-@@ -246,6 +246,11 @@ mod_accesslog_la_SOURCES = mod_accesslog
- mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
+diff -urNp lighttpd-1.4.34.org/configure.ac lighttpd-1.4.34/configure.ac
+--- lighttpd-1.4.34.org/configure.ac	2013-11-13 23:54:13.000000000 +0900
++++ lighttpd-1.4.34/configure.ac	2014-03-06 18:31:52.856880898 +0900
+@@ -653,7 +653,7 @@ AC_OUTPUT
+ 
+ 
+ do_build="mod_cgi mod_fastcgi mod_extforward mod_proxy mod_evhost mod_simple_vhost mod_access mod_alias mod_setenv mod_usertrack mod_auth mod_status mod_accesslog"
+-do_build="$do_build mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfile mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming"
++do_build="$do_build mod_rrdtool mod_secdownload mod_expire mod_compress mod_dirlisting mod_indexfile mod_userdir mod_webdav mod_staticfile mod_scgi mod_flv_streaming mod_url"
+ 
+ plugins="mod_rewrite mod_redirect mod_ssi mod_trigger_b4_dl"
+ features="regex-conditionals"
+diff -urNp lighttpd-1.4.34.org/src/Makefile.am lighttpd-1.4.34/src/Makefile.am
+--- lighttpd-1.4.34.org/src/Makefile.am	2013-12-04 01:17:52.000000000 +0900
++++ lighttpd-1.4.34/src/Makefile.am	2014-03-06 18:28:13.536423281 +0900
+@@ -265,6 +265,10 @@ mod_accesslog_la_SOURCES = mod_accesslog
+ mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version
  mod_accesslog_la_LIBADD = $(common_libadd)
  
 +lib_LTLIBRARIES += mod_url.la
 +mod_url_la_SOURCES = mod_url.c
 +mod_url_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
 +mod_url_la_LIBADD = $(common_libadd)
-+
  
  hdr = server.h buffer.h network.h log.h keyvalue.h \
        response.h request.h fastcgi.h chunk.h \
-diff -urNp lighttpd-1.4.20.org/src/Makefile.in lighttpd-1.4.20/src/Makefile.in
---- lighttpd-1.4.20.org/src/Makefile.in	2008-09-30 08:14:27.000000000 +0900
-+++ lighttpd-1.4.20/src/Makefile.in	2008-10-21 20:41:11.000000000 +0900
-@@ -321,6 +321,12 @@ mod_webdav_la_OBJECTS = $(am_mod_webdav_
- mod_webdav_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+diff -urNp lighttpd-1.4.34.org/src/Makefile.in lighttpd-1.4.34/src/Makefile.in
+--- lighttpd-1.4.34.org/src/Makefile.in	2014-01-20 21:09:11.000000000 +0900
++++ lighttpd-1.4.34/src/Makefile.in	2014-03-06 18:37:01.635929945 +0900
+@@ -414,6 +414,12 @@ mod_webdav_la_OBJECTS = $(am_mod_webdav_
+ mod_webdav_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
  	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mod_webdav_la_CFLAGS) \
  	$(CFLAGS) $(mod_webdav_la_LDFLAGS) $(LDFLAGS) -o $@
 +mod_url_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
@@ -50,28 +49,30 @@ diff -urNp lighttpd-1.4.20.org/src/Makefile.in lighttpd-1.4.20/src/Makefile.in
 +mod_url_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 +	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 +	$(mod_url_la_LDFLAGS) $(LDFLAGS) -o $@
- binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
- sbinPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
- PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS) $(sbin_PROGRAMS)
-@@ -413,7 +419,7 @@ SOURCES = $(liblightcomp_la_SOURCES) $(m
+ PROGRAMS = $(noinst_PROGRAMS) $(sbin_PROGRAMS)
+ am_lemon_OBJECTS = lemon.$(OBJEXT)
+ lemon_OBJECTS = $(am_lemon_OBJECTS)
+@@ -522,7 +528,8 @@ SOURCES = $(liblightcomp_la_SOURCES) $(m
+ 	$(mod_status_la_SOURCES) $(mod_trigger_b4_dl_la_SOURCES) \
  	$(mod_userdir_la_SOURCES) $(mod_usertrack_la_SOURCES) \
  	$(mod_webdav_la_SOURCES) $(lemon_SOURCES) $(lighttpd_SOURCES) \
- 	$(lighttpd_angel_SOURCES) $(proc_open_SOURCES) \
--	$(spawn_fcgi_SOURCES)
-+	$(spawn_fcgi_SOURCES) $(mod_url_SOURCES)
+-	$(lighttpd_angel_SOURCES) $(proc_open_SOURCES)
++	$(lighttpd_angel_SOURCES) $(proc_open_SOURCES) \
++	$(mod_url_SOURCES)
  DIST_SOURCES = $(am__liblightcomp_la_SOURCES_DIST) \
  	$(mod_access_la_SOURCES) $(mod_accesslog_la_SOURCES) \
  	$(mod_alias_la_SOURCES) $(mod_auth_la_SOURCES) \
-@@ -433,7 +439,7 @@ DIST_SOURCES = $(am__liblightcomp_la_SOU
+@@ -541,7 +548,8 @@ DIST_SOURCES = $(am__liblightcomp_la_SOU
+ 	$(mod_trigger_b4_dl_la_SOURCES) $(mod_userdir_la_SOURCES) \
  	$(mod_usertrack_la_SOURCES) $(mod_webdav_la_SOURCES) \
  	$(lemon_SOURCES) $(am__lighttpd_SOURCES_DIST) \
- 	$(lighttpd_angel_SOURCES) $(proc_open_SOURCES) \
--	$(spawn_fcgi_SOURCES)
-+	$(spawn_fcgi_SOURCES) $(mod_url_SOURCES)
- HEADERS = $(noinst_HEADERS)
- ETAGS = etags
- CTAGS = ctags
-@@ -601,7 +607,7 @@ common_src = buffer.c log.c \
+-	$(lighttpd_angel_SOURCES) $(proc_open_SOURCES)
++	$(lighttpd_angel_SOURCES) $(proc_open_SOURCES) \
++	$(mod_url_SOURCES)
+ am__can_run_installinfo = \
+   case $$AM_UPDATE_INFO_DIR in \
+     n|no|NO) false;; \
+@@ -741,7 +749,7 @@ common_src = buffer.c log.c \
        network_write.c network_linux_sendfile.c \
        network_freebsd_sendfile.c network_writev.c \
        network_solaris_sendfilev.c network_openssl.c \
@@ -80,35 +81,36 @@ diff -urNp lighttpd-1.4.20.org/src/Makefile.in lighttpd-1.4.20/src/Makefile.in
  
  src = server.c response.c connections.c network.c configfile.c \
  	configparser.c request.c proc_open.c $(am__append_2)
-@@ -619,7 +625,7 @@ lib_LTLIBRARIES = $(am__append_1) mod_fl
+@@ -758,7 +766,7 @@ lib_LTLIBRARIES = $(am__append_1) mod_fl
  	mod_ssi.la mod_secdownload.la mod_expire.la mod_evhost.la \
  	mod_simple_vhost.la mod_fastcgi.la mod_extforward.la \
  	mod_access.la mod_compress.la mod_auth.la mod_rewrite.la \
 -	mod_redirect.la mod_status.la mod_accesslog.la
 +	mod_redirect.la mod_status.la mod_accesslog.la mod_url.la
  @NO_RDYNAMIC_TRUE@liblightcomp_la_SOURCES = $(common_src)
- @NO_RDYNAMIC_TRUE@liblightcomp_la_CFLAGS = $(AM_CFLAGS)
+ @NO_RDYNAMIC_TRUE@liblightcomp_la_CFLAGS = $(AM_CFLAGS) $(LIBEV_CFLAGS)
  @NO_RDYNAMIC_TRUE@liblightcomp_la_LDFLAGS = -avoid-version -no-undefined
-@@ -726,6 +732,9 @@ mod_status_la_LIBADD = $(common_libadd)
+@@ -865,6 +873,9 @@ mod_status_la_LIBADD = $(common_libadd)
  mod_accesslog_la_SOURCES = mod_accesslog.c
- mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
+ mod_accesslog_la_LDFLAGS = -module -export-dynamic -avoid-version
  mod_accesslog_la_LIBADD = $(common_libadd)
 +mod_url_la_SOURCES = mod_url.c
 +mod_url_la_LDFLAGS = -module -export-dynamic -avoid-version -no-undefined
 +mod_url_la_LIBADD = $(common_libadd)
  hdr = server.h buffer.h network.h log.h keyvalue.h \
        response.h request.h fastcgi.h chunk.h \
-       settings.h http_chunk.h http_auth_digest.h \
-@@ -888,6 +897,8 @@ mod_usertrack.la: $(mod_usertrack_la_OBJ
- 	$(mod_usertrack_la_LINK) -rpath $(libdir) $(mod_usertrack_la_OBJECTS) $(mod_usertrack_la_LIBADD) $(LIBS)
- mod_webdav.la: $(mod_webdav_la_OBJECTS) $(mod_webdav_la_DEPENDENCIES) 
- 	$(mod_webdav_la_LINK) -rpath $(libdir) $(mod_webdav_la_OBJECTS) $(mod_webdav_la_LIBADD) $(LIBS)
-+mod_url.la: $(mod_url_la_OBJECTS) $(mod_url_la_DEPENDENCIES) 
-+	$(mod_url_la_LINK) -rpath $(libdir) $(mod_url_la_OBJECTS) $(mod_url_la_LIBADD) $(LIBS)
- install-binPROGRAMS: $(bin_PROGRAMS)
- 	@$(NORMAL_INSTALL)
- 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
-@@ -1084,6 +1095,7 @@ distclean-compile:
+       settings.h http_chunk.h \
+@@ -1071,6 +1082,9 @@ mod_usertrack.la: $(mod_usertrack_la_OBJ
+ mod_webdav.la: $(mod_webdav_la_OBJECTS) $(mod_webdav_la_DEPENDENCIES) $(EXTRA_mod_webdav_la_DEPENDENCIES) 
+ 	$(AM_V_CCLD)$(mod_webdav_la_LINK) -rpath $(libdir) $(mod_webdav_la_OBJECTS) $(mod_webdav_la_LIBADD) $(LIBS)
+ 
++mod_url.la: $(mod_url_la_OBJECTS) $(mod_url_la_DEPENDENCIES) $(EXTRA_mod_url_la_DEPENDENCIES)
++	$(AM_V_CCLD)$(mod_url_la_LINK) -rpath $(libdir) $(mod_url_la_OBJECTS) $(mod_url_la_LIBADD) $(LIBS)
++
+ clean-noinstPROGRAMS:
+ 	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
+ 	echo " rm -f" $$list; \
+@@ -1263,6 +1277,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mod_userdir.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mod_usertrack.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mod_webdav_la-mod_webdav.Plo@am__quote@
