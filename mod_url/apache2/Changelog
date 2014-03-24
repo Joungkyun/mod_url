@@ -1,10 +1,11 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.13 2014-03-24 16:13:19 oops Exp $
+# $Id: Changelog,v 1.14 2014-03-24 18:28:29 oops Exp $
 
 http://modurl.kldp.net
 
 * 2014/03/25 JoungKyun.Kim <http://oops.org>
 - bug [#318740] support regardleess of mod_userdir module
+- bug [#318741] fixed wrong magic cookie on 32bit build
 
 * 2014/03/24 JoungKyun.Kim <http://oops.org>
 - fixed warning architecture problems
