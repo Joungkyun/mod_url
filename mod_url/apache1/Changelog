@@ -1,7 +1,10 @@
 mod_url Apache module Changelog
-# $Id: Changelog,v 1.11 2012-01-24 17:18:31 oops Exp $
+# $Id: Changelog,v 1.12 2014-03-24 16:19:25 oops Exp $
 
 http://modurl.kldp.net
+
+* 2014/03/25 JoungKyun.Kim <http://oops.org>
+- bug [#318740] support regardleess of mod_userdir module
 
 * 2012/01/25 JoungKyun.Kim <http://oops.org>
 - bug #315267: fixed compile warnging with libiconv
