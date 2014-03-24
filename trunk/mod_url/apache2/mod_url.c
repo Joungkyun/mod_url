@@ -66,7 +66,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.21 2014-03-24 16:22:57 oops Exp $
+ * $Id: mod_url.c,v 1.22 2014-03-24 18:28:29 oops Exp $
  */
 
 /*
@@ -524,7 +524,7 @@ static int check_redurl (request_rec * r)
 #if defined(__x86_64__) || defined(__ppc64__)
 			"  LEN    => %lu",
 #else
-			"  LEN    => %r",
+			"  LEN    => %u",
 #endif
 			ric->tlen
 	);
