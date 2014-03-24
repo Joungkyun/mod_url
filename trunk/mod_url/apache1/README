@@ -1,6 +1,6 @@
 mod_url README document
 
-# $Id: README,v 1.3 2007-11-09 09:16:24 oops Exp $
+# $Id: README,v 1.4 2014-03-24 16:28:32 oops Exp $
 
 mod_url is Apache module that fix mismatched URL encoding between server and client.
 This module is operated on Apache 1.x. For apache2 see also follow URL:
@@ -58,30 +58,10 @@ http://modurl.kldp.net/ or http://kldp.net/projects/modurl/
        shell> cd /path/apache-src
        shell> ./configure .... --add-module=mod_url.c ...
 
-   2.3 Warn!
-       mod_url has dependency of mod_userdir. If your apache don't include
-       mod_userdir module, you can build with follows.
-
-       2.3.1 DOS build
-           shell> apxs -i -c -DURL_NOUSERDIR mod_url.c
-
-           or do follow command on mod_url source directory
-
-           shell> make EXTRA_CFLAGS="-DURL_NOUSERDIR"
-
-       2.3.2 static build
-           shell> EXTRA_CFLAGS="-DURL_NOUSERDIR" ./configure ... --add-module=mod_url.c ..
-
 3. Usage
 
    1. Edit your conf/httpd.conf file, and add a LoadModule line:
 
-      LoadModule  redurl_module    modules/mod_url.so
-
-      If you built with no URL_NOUSERDIR build constant, be careful after load
-      mod_userdir then, load mod_url.
-
-      LoadModule  userdir_module   modules/mod_userdir.so
       LoadModule  redurl_module    modules/mod_url.so
 
    2. Activate the mod_url and set encoding variables properly:
