@@ -21,8 +21,6 @@
 #define APR_WANT_STRFUNC
 #include "apr_want.h"
 
-#define WANT_BASENAME_MATCH
-
 #include "httpd.h"
 #include "http_core.h"
 #include "http_config.h"
@@ -68,7 +66,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.20 2014-03-24 16:13:19 oops Exp $
+ * $Id: mod_url.c,v 1.21 2014-03-24 16:22:57 oops Exp $
  */
 
 /*
