@@ -31,9 +31,6 @@
 #include "http_log.h"
 
 #include <iconv.h>
-#ifndef WIN32
-#include <pwd.h>
-#endif
 
 #ifndef _UNISTD_H
 #ifndef WIN32
@@ -71,7 +68,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.19 2014-03-24 09:49:20 oops Exp $
+ * $Id: mod_url.c,v 1.20 2014-03-24 16:13:19 oops Exp $
  */
 
 /*
@@ -367,6 +364,11 @@ static int check_redurl (request_rec * r)
 	int				  flen, plen;
 	int				  uic_r, ric_r;
 
+	ap_log_rerror(
+		APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
+		"** [check_redurl] Fixup hooking"
+	);
+
 	cfg = ap_get_module_config (r->per_dir_config, &redurl_module);
 	if ( ! cfg->enabled )
 		return DECLINED;
@@ -614,6 +616,11 @@ static int pre_redurl (request_rec * r) {
 	struct		  stat realstat;
 	short		  is_userdir = 0;
 
+	ap_log_rerror(
+		APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
+		"** [pre_redurl] Translate name hooking"
+	);
+
 	cfg = ap_get_module_config (r->per_dir_config, &redurl_module);
 	if ( ! cfg->enabled )
 		return DECLINED;
@@ -633,123 +640,7 @@ static int pre_redurl (request_rec * r) {
 
 #ifndef WINNT
 
-	/* Account access : /~user */
-	if ( r->uri[0] == '/' && r->uri[1] == '~' ) {
-#ifndef URL_NOUSERDIR
-#if defined(WIN32) || defined(NETWARE)
-		/* Need to figure out home dirs on NT and NetWare 
-		 * Shouldn't happen here, though, we trap for this in set_user_dir
-		 */
-		return DECLINED;
-#else
-		extern module AP_MODULE_DECLARE_DATA userdir_module;
-		typedef struct userdir_config {
-			int globally_disabled;
-			char *userdir;
-			apr_table_t *enabled_users;
-			apr_table_t *disabled_users;
-		} userdir_config;
-
-		const userdir_config *ucfg;
-		const char *userdirs;
-		const char *w, *dname;
-
-		is_userdir = 1;
-
-		ucfg = (userdir_config *)
-				ap_get_module_config (r->server->module_config, &userdir_module);
-		userdirs = ucfg->userdir;
-
-		if ( ucfg->userdir == NULL )
-			return DECLINED;
-
-		dname = r->uri + 2;
-		w = ap_getword (r->pool, &dname, '/');
-
-		/*
-		 * The 'dname' funny business involves backing it up to capture the '/'
-		 * delimiting the "/~user" part from the rest of the URL, in case there
-		 * was one (the case where there wasn't being just "GET /~user HTTP/1.0",
-		 * for which we don't want to tack on a '/' onto the filename).
-		 */
-		if (dname[-1] == '/') {
-			--dname;
-		}
-		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r, "UDir w => %s", w);
-		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r, "UDir dname => %s", dname);
-
-		/*
-		 * If there's no username, it's not for us.  Ignore . and .. as well.
-		 */
-		if ((w[0] == '\0') || ((w[1] == '.') &&
-			((w[2] == '\0') || ((w[2] == '.') && (w[3] == '\0'))))) {
-			return DECLINED;
-		}
-
-		/*
-		 * Nor if there's an username but it's in the disabled list.
-		 */
-		if (apr_table_get(ucfg->disabled_users, w) != NULL)
-			return DECLINED;
-
-		/*
-		 * If there's a global interdiction on UserDirs, check to see if this
-		 * name is one of the Blessed.
-		 */
-		if (ucfg->globally_disabled
-				&& (apr_table_get(ucfg->enabled_users, w) == NULL))
-			return DECLINED;
-
-		while ( *userdirs) {
-			const char * userdir;
-			int is_absolute;
-
-			userdir = ap_getword_conf (r->pool, &userdirs);
-			is_absolute = ap_os_is_path_absolute (r->pool, userdir);
-
-			if ( strchr (userdir, '*') ) {
-				char *x = ap_getword (r->pool, &userdir, '*');
-
-				if ( is_absolute ) {
-					/* token '*' within absolute path
-					 * serves [UserDir arg-pre*][user][UserDir arg-post*]
-					 * /somepath/ * /somedir + /~smith -> /somepath/smith/somedir
-					 */
-					sprintf (docroot, "%s%s%s%s", x, w, userdir, dname);
-				} else {
-					return DECLINED;
-				}
-			} else if ( is_absolute ) {
-				/* An absolute path, no * token:
-				 * serves [UserDir arg]/[user]
-				 * /home + /~smith -> /home/smith
-				 */
-				if ( userdir[strlen (userdir) - 1] == '/' )
-					sprintf (docroot, "%s%s%s", userdir, w, dname);
-				else
-					sprintf (docroot, "%s/%s%s", userdir, w, dname);
-			} else if ( strchr (userdir, ':') ) {
-				return DECLINED;
-			} else {
-				struct passwd *pw;
-
-				if ( (pw = getpwnam (w)) ) {
-#ifdef OS2
-					/* Need to manually add user anem for OS/2 */
-					sprintf (docroot, "%s%s/%s%s", pw->pw_dir, w, userdir, dname);
-#else
-					sprintf (docroot, "%s/%s%s", pw->pw_dir, userdir, dname);
-#endif
-				}
-			}
-		}
-#endif
-#else
-		return DECLINED;
-#endif /* URL_NOUSERDIR */
-	} else {
-		strcpy (docroot, ap_document_root (r));
-	}
+	strcpy (docroot, ap_document_root (r));
 	rootlen = strlen (docroot);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r, "UDir docroot => %s", docroot);
 
