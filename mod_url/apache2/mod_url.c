@@ -71,7 +71,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.18 2012-12-20 16:01:45 oops Exp $
+ * $Id: mod_url.c,v 1.19 2014-03-24 09:49:20 oops Exp $
  */
 
 /*
@@ -316,9 +316,21 @@ void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * 
 	iconv_close (cfg->cd);
 
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-			"  Oirg       => %s (%d)", s_uri, ic->len);
+#if defined(__x86_64__) || defined(__ppc64__)
+			"  Oirg       => %s (%lu)",
+#else
+			"  Oirg       => %s (%u)",
+#endif
+			s_uri, ic->len
+	);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-			"  Fixed      => %s (%d)", ic->uri, tlen);
+#if defined(__x86_64__) || defined(__ppc64__)
+			"  Fixed      => %s (%lu)",
+#else
+			"  Fixed      => %s (%u)",
+#endif
+			ic->uri, tlen
+	);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  Check Code => %d", ic->ret);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
@@ -430,11 +442,25 @@ static int check_redurl (request_rec * r)
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  URI   => %s", uic->uri);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-			"  S_LEN => %d", uic->len);
+#if defined(__x86_64__) || defined(__ppc64__)
+			"  S_LEN => %lu",
+#else
+			"  S_LEN => %u",
+#endif
+			uic->len
+	);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-			"  LEN   => %d", uic->tlen);
+#if defined(__x86_64__) || defined(__ppc64__)
+			"  LEN   => %lu",
+#else
+			"  LEN   => %u",
+#endif
+			uic->tlen
+	);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-			"  CODE  => %d", uic->ret);
+			"  CODE  => %d",
+			uic->ret
+	);
 
 	if ( uic_r == REDURL_ICONV_FALSE ) {
 		/* converting failed */
@@ -487,9 +513,21 @@ static int check_redurl (request_rec * r)
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  PATH   => %s", ric->uri);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-			"  S_LEN  => %d", ric->len);
+#if defined(__x86_64__) || defined(__ppc64__)
+			"  S_LEN  => %lu",
+#else
+			"  S_LEN  => %u",
+#endif
+			ric->len
+	);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-			"  LEN    => %d", ric->tlen);
+#if defined(__x86_64__) || defined(__ppc64__)
+			"  LEN    => %lu",
+#else
+			"  LEN    => %r",
+#endif
+			ric->tlen
+	);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  CODE   => %d", ric->ret);
 
