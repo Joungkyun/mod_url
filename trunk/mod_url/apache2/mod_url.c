@@ -58,6 +58,10 @@
 #	define MODURL_LOG_MARK file,line,APLOG_MODULE_INDEX
 #endif
 
+#ifndef UInt
+#define UInt unsigned int
+#endif
+
 /*
  * mod_url.c: fix mismatched URL encoding between server and clients
  * Writer:
@@ -66,7 +70,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.22 2014-03-24 18:28:29 oops Exp $
+ * $Id: mod_url.c,v 1.23 2016-02-02 17:25:33 oops Exp $
  */
 
 /*
@@ -311,21 +315,9 @@ void check_redurl_iconv (request_rec * r, urlconfig * cfg, iconv_s * ic, char * 
 	iconv_close (cfg->cd);
 
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-#if defined(__x86_64__) || defined(__ppc64__)
-			"  Oirg       => %s (%lu)",
-#else
-			"  Oirg       => %s (%u)",
-#endif
-			s_uri, ic->len
-	);
+			"  Oirg       => %s (%u)", s_uri, (UInt) ic->len);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-#if defined(__x86_64__) || defined(__ppc64__)
-			"  Fixed      => %s (%lu)",
-#else
-			"  Fixed      => %s (%u)",
-#endif
-			ic->uri, tlen
-	);
+			"  Fixed      => %s (%u)", ic->uri, (UInt) tlen);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  Check Code => %d", ic->ret);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
@@ -442,21 +434,9 @@ static int check_redurl (request_rec * r)
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  URI   => %s", uic->uri);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-#if defined(__x86_64__) || defined(__ppc64__)
-			"  S_LEN => %lu",
-#else
-			"  S_LEN => %u",
-#endif
-			uic->len
-	);
+			"  S_LEN => %u", (UInt) uic->len);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-#if defined(__x86_64__) || defined(__ppc64__)
-			"  LEN   => %lu",
-#else
-			"  LEN   => %u",
-#endif
-			uic->tlen
-	);
+			"  LEN   => %u", (UInt) uic->tlen);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  CODE  => %d",
 			uic->ret
@@ -513,21 +493,9 @@ static int check_redurl (request_rec * r)
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  PATH   => %s", ric->uri);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-#if defined(__x86_64__) || defined(__ppc64__)
-			"  S_LEN  => %lu",
-#else
-			"  S_LEN  => %u",
-#endif
-			ric->len
-	);
+			"  S_LEN  => %u", (UInt) ric->len);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-#if defined(__x86_64__) || defined(__ppc64__)
-			"  LEN    => %lu",
-#else
-			"  LEN    => %u",
-#endif
-			ric->tlen
-	);
+			"  LEN    => %u", (UInt) ric->tlen);
 	ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
 			"  CODE   => %d", ric->ret);
 
