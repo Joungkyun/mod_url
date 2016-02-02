@@ -27,6 +27,10 @@
 #include "http_request.h"
 #include "http_log.h"
 
+#ifndef UInt
+#define UInt unsigned int
+#endif
+
 #include <iconv.h>
 
 #define DEFAULT_SERVER_ENCODING "EUC-KR"
@@ -173,7 +177,7 @@ char * check_redurl_encode (const char * str, int len, int * retlen)
 	static unsigned char hexs[] = "0123456789ABCDEF";
 	unsigned char * o, * r;
 	unsigned char * s;
-	int l;
+	int l = 0;
 
 	r = (unsigned char *) malloc (sizeof (char) * (len * 3 + 1));
 	if ( r == NULL )
@@ -208,10 +212,7 @@ static int check_redurl(request_rec *r)
 {
 	urlconfig *cfg;
 	char *good, *bad, *postgood, *url;
-	apr_finfo_t dirent;
-	int filoc, dotloc, urlen, pglen;
-	apr_array_header_t *candidates = NULL;
-	apr_dir_t		  *dir;
+	int filoc, urlen, pglen;
 
 	cfg = ap_get_module_config(r->per_dir_config, &redurl_module);
 	if (!cfg->enabled) {
@@ -309,8 +310,8 @@ static int check_redurl(request_rec *r)
 
 		tlen=strlen(buf);
 		ap_log_rerror(APLOG_MARK, APLOG_DEBUG, APR_SUCCESS, r,
-			 "ICONV: from uri %s to %s(%d->%d): CHECK CODE '%d'",
-			 r->uri, buf, len, tlen, ret);
+			 "ICONV: from uri %s to %s(%u->%u): CHECK CODE '%d'",
+			 r->uri, buf, (UInt) len, (UInt) tlen, ret);
 		if (ret >= 0
 #if __GLIBC_MINOR__ >= 2
 			&& ret == 0
@@ -352,7 +353,11 @@ static void register_hooks(apr_pool_t *p)
 	ap_hook_fixups(check_redurl,NULL,NULL,APR_HOOK_LAST);
 }
 
+#if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER < 4
 module AP_MODULE_DECLARE_DATA redurl_module =
+#else
+AP_DECLARE_MODULE(redurl) =
+#endif
 {
 	STANDARD20_MODULE_STUFF,
 	create_mconfig_for_directory,   /* create per-dir config */
