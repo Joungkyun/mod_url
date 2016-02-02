@@ -50,7 +50,13 @@
 #define REDURL_ICONV_TRUE 0
 #define REDURL_ICONV_FALSE 1
 
-#if MODULE_MAGIC_NUMBER_MAJOR <= 20051115 // until httpd 2.2
+#if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER > 3
+#	ifndef HTTPD_24
+#		define HTTPD_24
+#	endif
+#endif
+
+#ifndef HTTPD_24                          // until httpd 2.4
 #	define REDURL_LOG_MARK APLOG_MARK
 #	define MODURL_LOG_MARK file,line
 #else                                     // from httpd 2.4
@@ -70,7 +76,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.23 2016-02-02 17:25:33 oops Exp $
+ * $Id: mod_url.c,v 1.24 2016-02-02 17:30:31 oops Exp $
  */
 
 /*
