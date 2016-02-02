@@ -76,7 +76,7 @@
  * URL:
  *   http://modurl.kldp.net/
  *
- * $Id: mod_url.c,v 1.24 2016-02-02 17:30:31 oops Exp $
+ * $Id: mod_url.c,v 1.25 2016-02-02 17:33:38 oops Exp $
  */
 
 /*
@@ -746,7 +746,11 @@ static void register_hooks (apr_pool_t * p)
 #endif
 }
 
+#ifndef HTTPD_24
 module AP_MODULE_DECLARE_DATA redurl_module =
+#else
+AP_DECLARE_MODULE(redurl) =
+#endif
 {
 	STANDARD20_MODULE_STUFF,
 	create_mconfig_for_directory,	/* create per-dir config */
