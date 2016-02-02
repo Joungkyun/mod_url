@@ -1,10 +1,11 @@
 mod_url Apache 2 module Changelog
-# $Id: Changelog,v 1.15 2016-02-02 17:32:38 oops Exp $
+# $Id: Changelog,v 1.16 2016-02-02 17:33:38 oops Exp $
 
 http://modurl.kldp.net
 
 * 2016/02/03 JoungKyun.Kim <http://oops.org>
 - refix bug [#318479]: fixed APLOG_MARK changes on httpd 2.4
+- fixed missing module name on debug message title on httpd 2.4
 
 * 2014/03/25 JoungKyun.Kim <http://oops.org>
 - bug [#318740] support regardleess of mod_userdir module
