@@ -14,7 +14,7 @@ mod_url rewrites uri that fix mismatched URL encoding between server and client.
  * apache 1.3
  * apache 2
  * lighttpd
- * nginx use vozlts/nginx-module-url#1
+ * nginx use @vozlts [nginx-module-url](https://github.com/vozlt/nginx-module-url/)
 
 ## Installation
 
