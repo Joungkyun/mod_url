@@ -3,8 +3,8 @@ mod_url README document for Apache 2
 # $Id: README,v 1.5 2016-02-02 17:40:41 oops Exp $
 
 mod_url is Apache module that fix mismatched URL encoding between server and client.
-This module is operated on Apache 2. For apache1 see also follow URL:
-http://modurl.kldp.net/ or http://kldp.net/projects/modurl/
+This module is operated on Apache 2.
+
 
 Current version is tested follw versions:
     2.0.64
