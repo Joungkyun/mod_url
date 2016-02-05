@@ -4,8 +4,6 @@ mod_url README document for Lighttpd
 mod_url is lighttpd module that fix mismatched URL encoding between server and client.
 This module is operated on lighttpd 1.4.x.
 
-This product includes software developed by the KLDP.net (http://modurl.kldp.net)
-
 
 1. Compile
 
