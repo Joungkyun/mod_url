@@ -6,7 +6,7 @@ mod_url is Apache module that fix mismatched URL encoding between server and cli
 This module is operated on Apache 2.
 
 
-Current version is tested follw versions:
+Current version is tested follow versions:
     2.0.64
     2.2.31
     2.4.18
