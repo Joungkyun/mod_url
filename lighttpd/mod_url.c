@@ -162,7 +162,13 @@ SETDEFAULTS_FUNC(mod_url_set_default) {
 
 		p->config_storage[i] = s;
 
-		if ( 0 != config_insert_values_global (srv, ((data_config *) srv->config_context->data[i])->value, cv) ) {
+#if LIGHTTPD_VERSION_ID < 66599
+		// LIGHTY < 1.4.39
+		if ( 0 != config_insert_values_global (srv, ((data_config *) srv->config_context->data[i])->value, cv) )
+#else
+		if ( 0 != config_insert_values_global (srv, ((data_config *) srv->config_context->data[i])->value, cv, i == 0 ? T_CONFIG_SCOPE_SERVER : T_CONFIG_SCOPE_CONNECTION) )
+#endif
+		{
 			url_log ("s", "Can't insert global config value");
 			return HANDLER_ERROR;
 		}

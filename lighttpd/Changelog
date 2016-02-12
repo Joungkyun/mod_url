@@ -4,6 +4,9 @@ mod_url Lighttpd module changelog
 http://modurl.kldp.net
 http://oops.org
 
+* 2016/02/12 JoungKyun.Kim <http://oops.org>
+- fixed config_insert_values_global wrong argument over 1.4.39
+
 * 2014/03/06 JoungKyun.Kim <http://oops.org>
 - bug #318739: fixed segfault when use sever and client encoding with
   default value
