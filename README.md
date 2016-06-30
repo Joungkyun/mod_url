@@ -16,6 +16,10 @@ mod_url rewrites uri that fix mismatched URL encoding between server and client.
  * lighttpd
  * nginx use @vozlt [nginx-module-url](https://github.com/vozlt/nginx-module-url/)
 
+## Download
+
+This project has no plan for release. Use latest rivision.
+
 ## Installation
 
   * For Apache
