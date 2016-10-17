@@ -29,4 +29,4 @@ This project has no plan for release. Use latest rivision.
     ```
   * For lighttpd
   
-    See also [README](https://github.com/Joungkyun/mod_url/blob/master/lighttpd/README) of lighttpd mod_url directory
+    See also [README](https://github.com/Joungkyun/mod_url/blob/master/lighttpd/README) in the lighttpd mod_url directory
